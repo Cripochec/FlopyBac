@@ -1,18 +1,13 @@
-import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import random
-
+import smtplib
 
 # Настройки SMTP-сервера
 smtp_server = 'smtp.yandex.ru'
 smtp_port = 587
 smtp_username = 'Fikys203@yandex.ru'
 smtp_password = 'mmzudkqlfejbgsvk'
-
-# TO_EMAIL = "danil_biryukov_2003@mail.ru"
-# TO_EMAIL = "ticholazroman@mail.ru"
-TO_EMAIL = "artsport03@gmail.com"
 
 
 def start_smtp_server():
@@ -36,8 +31,8 @@ def send_email(to_email, subject, message):
             msg['From'] = smtp_username
             msg['To'] = to_email
             msg['Subject'] = subject
-            # Добавляем текст письма
-            msg.attach(MIMEText(message, 'plain', 'utf-8'))
+            # Изменения: Используем HTML для форматирования текста
+            msg.attach(MIMEText(f'<div style="text-align: center;">{message}</div>', 'html'))
             # Отправляем письмо
             server.sendmail(smtp_username, to_email, msg.as_string())
             print("good!")
@@ -51,7 +46,3 @@ def send_email(to_email, subject, message):
 def key_generation():
     code = random.randint(1000, 9999)
     return code
-
-for i in range(10):
-    send_email(TO_EMAIL, "Тест", "Привет! Это тестовое сообщение.")
-
