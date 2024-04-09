@@ -20,7 +20,11 @@ def register_data():
     else:
         return jsonify({"status": False})
 
-
+# для сервера
 if __name__ == '__main__':
     # Запускаем сервер на всех доступных интерфейсах (0.0.0.0) и указываем порт 5000
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+# для локалки
+# if __name__ == '__main__':
+#     app.run(debug=True, port=5000)
