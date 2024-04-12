@@ -47,6 +47,9 @@ def check_email(email):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
+    create_data_base()
+    cur.execute('DELETE FROM person')
+
     try:
         cur.execute('SELECT COUNT(*) FROM person WHERE email = ?', (email,))
         count = cur.fetchone()[0]
