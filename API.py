@@ -1,24 +1,37 @@
 from flask import Flask, request, jsonify
 from smtp import key_generation, send_email
-from DB import add_new_person
+from DB import add_new_person, check_email
 app = Flask(__name__)
 
 
-@app.route('/register_data', methods=['POST'])
-def register_data():
+# Проверка email нового пользователя и отправка разового кода
+@app.route('/entry_email', methods=['POST'])
+def entry_email():
+    # Получаем данные из запроса
+    data = request.get_json()
+
+    email = data['email']
+
+    if check_email(email):
+        code = key_generation()
+        send_email(email, "Код регистрации", "Разовый код: "+str(code))
+        return jsonify({"status": True, "code": code})
+    else:
+        return jsonify({"status": False})
+
+
+# Добавление нового пользователя
+@app.route('/add_new_person_route', methods=['POST'])
+def add_new_person_route():
     # Получаем данные из запроса
     data = request.get_json()
 
     email = data['email']
     password = data['password']
-    info = add_new_person(email, password)
 
-    if info['status']:
-        code = key_generation()
-        send_email(email, "Код регистрации", "Разовый код: "+str(code))
-        return jsonify({"status": True, "user_id": info['user_id'], "code": code})
-    else:
-        return jsonify({"status": False})
+    info = add_new_person(email, password)
+    return jsonify({"status": info['status'], "user_id": info['user_id']})
+
 
 # для сервера
 if __name__ == '__main__':
