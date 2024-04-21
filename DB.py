@@ -41,7 +41,7 @@ def add_new_person(email, password):
         return {"status": False}
 
 
-def check_person(email, password):
+def check_person_data_base(email, password):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
@@ -82,6 +82,3 @@ def check_email(email):
         print(ex)
         conn.close()
         return False
-
-
-check_person("danil_biryukov_2003@mail.ru", "123")

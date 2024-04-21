@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from smtp import key_generation, send_email
-from DB import add_new_person, check_email, check_person
+from DB import add_new_person, check_email, check_person_data_base
 app = Flask(__name__)
 
 
@@ -42,7 +42,7 @@ def check_person():
     email = data['email']
     password = data['password']
 
-    info = check_person(email, password)
+    info = check_person_data_base(email, password)
     if info['status']:
         return jsonify({"status": True, "id_person": info['user_id']})
     else:
