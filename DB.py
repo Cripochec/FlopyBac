@@ -24,8 +24,6 @@ def add_new_person(email, password):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    cur.execute('DELETE FROM person')
-
     try:
         # SQL-запрос на добавление записи
         cur.execute(f'INSERT INTO person (email, password) VALUES ("{email}", "{password}")')
@@ -43,12 +41,31 @@ def add_new_person(email, password):
         return {"status": False}
 
 
-def check_email(email):
+def check_person(email, password):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    create_data_base()
-    cur.execute('DELETE FROM person')
+    try:
+        cur.execute("SELECT id, password FROM person WHERE email=?", (email,))
+        user_info = cur.fetchone()
+
+        if user_info and password == user_info[1]:
+            user_id = user_info[0]
+            conn.close()
+            return {"status": True, "user_id": user_id}
+        else:
+            conn.close()
+            return {"status": False}
+
+    except Exception as ex:
+        print(ex)
+        conn.close()
+        return {"status": False}
+
+
+def check_email(email):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
 
     try:
         cur.execute('SELECT COUNT(*) FROM person WHERE email = ?', (email,))
@@ -65,3 +82,6 @@ def check_email(email):
         print(ex)
         conn.close()
         return False
+
+
+check_person("danil_biryukov_2003@mail.ru", "123")

@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from smtp import key_generation, send_email
-from DB import add_new_person, check_email
+from DB import add_new_person, check_email, check_person
 app = Flask(__name__)
 
 
@@ -31,6 +31,22 @@ def add_new_person_route():
 
     info = add_new_person(email, password)
     return jsonify({"status": info['status'], "user_id": info['user_id']})
+
+
+# Добавление нового пользователя
+@app.route('/check_person', methods=['POST'])
+def check_person():
+    # Получаем данные из запроса
+    data = request.get_json()
+
+    email = data['email']
+    password = data['password']
+
+    info = check_person(email, password)
+    if info['status']:
+        return jsonify({"status": True, "id_person": info['user_id']})
+    else:
+        return jsonify({"status": False, "id_person": 0})
 
 
 # для сервера
