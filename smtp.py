@@ -44,5 +44,5 @@ def send_email(to_email, subject, message):
 
 
 def key_generation():
-    code = random.randint(1000, 9999)
+    code = random.randint(100000, 999999)
     return code
