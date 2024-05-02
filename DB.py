@@ -184,7 +184,8 @@ def add_new_person(email, password):
         conn.commit()
         conn.close()
 
-        return {"status": True, "user_id": user_id}
+        print(user_id)
+        return {"status": True, "id_person": user_id}
 
     except Exception as ex:
         print(ex)
@@ -375,3 +376,4 @@ def get_person_info_data_base(id_person):
 
     finally:
         conn.close()
+

@@ -31,7 +31,7 @@ def add_new_person_route():
     password = data['password']
 
     info = add_new_person(email, password)
-    return jsonify({"status": info['status'], "user_id": info['user_id']})
+    return jsonify({"status": info['status'], "id_person": info['id_person']})
 
 
 # Добавление нового пользователя
