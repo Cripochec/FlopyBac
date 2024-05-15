@@ -1,24 +1,60 @@
 from flask import Flask, request, jsonify
+import threading
 from smtp import key_generation, send_email
 from DB import (create_data_base, add_new_person, check_email, check_person_data_base, set_person_info_data_base,
                 get_person_info_data_base)
 app = Flask(__name__)
 
 
-# Проверка email нового пользователя и отправка разового кода
-@app.route('/entry_email', methods=['POST'])
-def entry_email():
+# Вход в приложение
+@app.route('/entry_person', methods=['POST'])
+def entry_person():
+    # Получаем данные из запроса
+    data = request.get_json()
+
+    email = data['email']
+    password = data['password']
+
+    info = check_person_data_base(email, password)
+
+    # status:
+    # 0 - успешно
+    # 1 - email не найден
+    # 2 - password не совпадает
+    # 3 - ошибка сервера
+
+    if info['status'] == 0:
+        return jsonify({"status": info['status'], "id_person": info['user_id']})
+    else:
+        return jsonify({"status": info['status']})
+
+
+# Регистрация, проверка email нового пользователя и отправка разового кода
+@app.route('/register_person', methods=['POST'])
+def register_person():
     # Получаем данные из запроса
     data = request.get_json()
 
     email = data['email']
 
-    if check_email(email):
+    status = check_email(email)
+
+    # status:
+    # 0 - успешно
+    # 1 - email занят
+    # 3 - ошибка сервера
+
+    if status == 0:
         code = key_generation()
-        send_email(email, "Код регистрации", "Разовый код: "+str(code))
-        return jsonify({"status": True, "code": code})
+        # Вызываем функцию send_email в отдельном потоке
+        email_thread = threading.Thread(target=send_email, args=(email, "Код регистрации", "Разовый код: " + str(code)))
+        email_thread.start()
+
+        return jsonify({"status": 0, "code": code})
+    elif status == 1:
+        return jsonify({"status": 1})
     else:
-        return jsonify({"status": False})
+        return jsonify({"status": 3})
 
 
 # Добавление нового пользователя
@@ -31,23 +67,23 @@ def add_new_person_route():
     password = data['password']
 
     info = add_new_person(email, password)
-    return jsonify({"status": info['status'], "id_person": info['id_person']})
+
+    # status:
+    # 0 - успешно
+    # 1 - ошибка сервера
+
+    if info['status'] == 0:
+        return jsonify({"status": 0, "id_person": info['id_person']})
+    else:
+        return jsonify({"status": 1})
+
+
+
+
 
 
 # Добавление нового пользователя
-@app.route('/check_person', methods=['POST'])
-def check_person():
-    # Получаем данные из запроса
-    data = request.get_json()
 
-    email = data['email']
-    password = data['password']
-
-    info = check_person_data_base(email, password)
-    if info['status']:
-        return jsonify({"status": True, "id_person": info['user_id']})
-    else:
-        return jsonify({"status": False, "id_person": 0})
 
 
 # Добавление информации о пользователи
@@ -95,6 +131,7 @@ def get_persons_info():
 
 
 if __name__ == '__main__':
+
     create_data_base()
     # Запускаем сервер на всех доступных интерфейсах (0.0.0.0) и указываем порт 5000
     app.run(debug=True, host='0.0.0.0', port=5000)

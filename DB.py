@@ -171,29 +171,13 @@ def drop_all_tables():
     conn.close()
 
 
-def add_new_person(email, password):
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-
-    try:
-        # SQL-запрос на добавление записи
-        cur.execute(f'INSERT INTO person (email, password) VALUES ("{email}", "{password}")')
-
-        user_id = cur.lastrowid
-
-        conn.commit()
-        conn.close()
-
-        print(user_id)
-        return {"status": True, "id_person": user_id}
-
-    except Exception as ex:
-        print(ex)
-        conn.close()
-        return {"status": False}
-
-
+# Вход в приложение
 def check_person_data_base(email, password):
+    # status:
+    # 0 - успешно
+    # 1 - email не найден
+    # 2 - password не совпадает
+    # 3 - ошибка сервера
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
@@ -201,21 +185,27 @@ def check_person_data_base(email, password):
         cur.execute("SELECT id, password FROM person WHERE email=?", (email,))
         user_info = cur.fetchone()
 
-        if user_info and password == user_info[1]:
-            user_id = user_info[0]
-            conn.close()
-            return {"status": True, "user_id": user_id}
+        if user_info:
+            user_id, stored_password = user_info
+            if password == stored_password:
+                return {"status": 0, "user_id": user_id}
+            else:
+                return {"status": 2}
         else:
-            conn.close()
-            return {"status": False}
-
+            return {"status": 1}
     except Exception as ex:
         print(ex)
+        return {"status": 3}
+    finally:
         conn.close()
-        return {"status": False}
 
 
+# Вхождение email в общую таблицу
 def check_email(email):
+    # return
+    # 0 - Не входит
+    # 1 - Входит
+    # 2 - Ошибка
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
@@ -223,17 +213,46 @@ def check_email(email):
         cur.execute('SELECT COUNT(*) FROM person WHERE email = ?', (email,))
         count = cur.fetchone()[0]
 
-        conn.close()
-
         if count == 0:
-            return True
+            return 0
         else:
-            return False
+            return 1
 
     except Exception as ex:
         print(ex)
+        return 2
+    finally:
         conn.close()
-        return False
+
+
+# Добавление в таблицу person нового пользователя
+def add_new_person(email, password):
+    # return
+    # 0 - Удачно
+    # 1 - Ошибка
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        # SQL-запрос на добавление записи
+        cur.execute('INSERT INTO person (email, password) VALUES (?, ?)', (email, password))
+        user_id = cur.lastrowid
+        conn.commit()
+
+        return {"status": 0, "id_person": user_id}
+
+    except Exception as ex:
+        print(ex)
+        return {"status": 1}
+    finally:
+        conn.close()
+
+
+
+
+
+
 
 
 def set_person_info_data_base(id_person, name, age, gender, goal, city, zodiac_sign, height, education, children,

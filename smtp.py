@@ -23,6 +23,10 @@ def start_smtp_server():
 
 
 def send_email(to_email, subject, message):
+    # return
+    # 0 - Письмо отправленно
+    # 1 - Письмо не отправленно
+    # 2 - Ошибка
     try:
         server = start_smtp_server()
         if server is not None:
@@ -35,14 +39,17 @@ def send_email(to_email, subject, message):
             msg.attach(MIMEText(f'<div style="text-align: center;">{message}</div>', 'html'))
             # Отправляем письмо
             server.sendmail(smtp_username, to_email, msg.as_string())
-            print("good!")
             server.quit()
+            return 0
         else:
-            print("no connection")
+            print("ERROR: no connection in smtp server")
+            return 1
     except Exception as ex:
-        print(f"bad( ERROR:{ex}")
+        print(f"ERROR: {ex}")
+        return 2
 
 
 def key_generation():
     code = random.randint(100000, 999999)
+    print(code)
     return code

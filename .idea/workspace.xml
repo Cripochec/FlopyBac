@@ -6,7 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API.py" beforeDir="false" afterPath="$PROJECT_DIR$/API.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Ai.py" beforeDir="false" afterPath="$PROJECT_DIR$/Ai.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DB.py" beforeDir="false" afterPath="$PROJECT_DIR$/DB.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dataset.json" beforeDir="false" afterPath="$PROJECT_DIR$/dataset.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/smtp.py" beforeDir="false" afterPath="$PROJECT_DIR$/smtp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transform_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/transform_dataset.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,7 +50,7 @@
       <recent name="C:\Project\FlopyB" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.DB">
+  <component name="RunManager" selected="Python.Ai">
     <configuration name="API" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="FlopyB" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -173,9 +179,9 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.DB" />
         <item itemvalue="Python.Ai" />
         <item itemvalue="Python.transform_dataset" />
+        <item itemvalue="Python.DB" />
         <item itemvalue="Python.clik" />
         <item itemvalue="Python.reqest" />
       </list>
