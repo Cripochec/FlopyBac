@@ -28,4 +28,15 @@ def register_code():
     # Печатаем ответ от сервера
     print(response.text)
 
+def ai():
+    url = 'http://127.0.0.1:5000/predict'
+    data = {
+        'common_interests': ['Literature', 'Music', 'Sports'],
+        'common_personal_preferences': 2,
+        'occupation_similarity': True
+    }
+
+    response = requests.post(url, json=data)
+    print(response.json())
+
 register()
