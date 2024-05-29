@@ -22,19 +22,22 @@ def create_data_base():
                     )''')
     cur.execute("DELETE FROM gender")
     try:
-        info = [("не выбрано",), ("мужской",), ("женский",)]
+        info = [("Не выбрано",), ("Мужской",), ("Женский",)]
         cur.executemany("INSERT INTO gender (name) VALUES (?)", info)
     except sqlite3.IntegrityError:
         print("Ошибка: Дубликаты значений в таблице 'gender'.")
 
     # Создание таблицы "цель"
-    cur.execute('''CREATE TABLE IF NOT EXISTS goal (
+    cur.execute('''CREATE TABLE IF NOT EXISTS target (
                         id INTEGER PRIMARY KEY,
                         name TEXT NOT NULL UNIQUE
                     )''')
     cur.execute("DELETE FROM goal")
     try:
-        info = [("Дружба",), ("Свидания",), ("Отношения",), ("Без конкретики",)]
+        info = [("<b>Дружба</b>\nНайти друзей и знакомых",),
+                ("<b>Свидания</b>\nХодить на свидания и хорошо\nпроводить время",),
+                ("<b>Отношения</b>\nНайти вторую половинку",),
+                ("<b>Общение без конкретики</b>\nОбщяться, делиться мыслями",)]
         cur.executemany("INSERT INTO goal (name) VALUES (?)", info)
     except sqlite3.IntegrityError:
         print("Ошибка: Дубликаты значений в таблице 'goal'.")
@@ -47,8 +50,8 @@ def create_data_base():
     cur.execute("DELETE FROM zodiac_sign")
     try:
         info = [
-            ("Овен",), ("Телец",), ("Близнецы",), ("Рак",), ("Лев",), ("Дева",), ("Весы",), ("Скорпион",), ("Стрелец",),
-            ("Козерог",), ("Водолей",), ("Рыбы",), ("Не выбрано",)]
+            ("Не выбрано",), ("Овен",), ("Телец",), ("Близнецы",), ("Рак",), ("Лев",), ("Дева",),
+            ("Весы",), ("Скорпион",), ("Стрелец",), ("Козерог",), ("Водолей",), ("Рыбы",)]
         cur.executemany("INSERT INTO zodiac_sign (name) VALUES (?)", info)
     except sqlite3.IntegrityError:
         print("Ошибка: Дубликаты значений в таблице 'zodiac_signс'.")
@@ -60,7 +63,7 @@ def create_data_base():
                     )''')
     cur.execute("DELETE FROM education")
     try:
-        info = [("Среднее",), ("Не законченное высшее",), ("Высшее",), ("Несколько высших",), ("Не выбрано",)]
+        info = [("Не выбрано",), ("Среднее",), ("Высшее",), ("Аспирант/\nКандидат наук",)]
         cur.executemany("INSERT INTO education (name) VALUES (?)", info)
     except sqlite3.IntegrityError:
         print("Ошибка: Дубликаты значений в таблице 'education'.")
@@ -72,7 +75,7 @@ def create_data_base():
                     )''')
     cur.execute("DELETE FROM children")
     try:
-        info = [("Нет и не планирую",), ("Нет, но хотелось бы",), ("Уже есть",), ("Не выбрано",)]
+        info = [("Не выбрано",), ("Нет и не планирую",), ("Нет, но хотелось бы",), ("Уже есть",)]
         cur.executemany("INSERT INTO children (name) VALUES (?)", info)
     except sqlite3.IntegrityError:
         print("Ошибка: Дубликаты значений в таблице 'children'.")
@@ -84,7 +87,7 @@ def create_data_base():
                     )''')
     cur.execute("DELETE FROM smoking")
     try:
-        info = [("Негативно",), ("Нейтрально",), ("Положительно",), ("Не выбрано",)]
+        info = [("Не выбрано",), ("Резко негативно",), ("Нейтрально",), ("Положительно",)]
         cur.executemany("INSERT INTO smoking (name) VALUES (?)", info)
     except sqlite3.IntegrityError:
         print("Ошибка: Дубликаты значений в таблице 'smoking'.")
@@ -96,7 +99,7 @@ def create_data_base():
                     )''')
     cur.execute("DELETE FROM alcohol")
     try:
-        info = [("Негативно",), ("Нейтрально",), ("Положительно",), ("Не выбрано",)]
+        info = [("Не выбрано",), ("Резко негативно",), ("Нейтрально",), ("Положительно",)]
         cur.executemany("INSERT INTO alcohol (name) VALUES (?)", info)
     except sqlite3.IntegrityError:
         print("Ошибка: Дубликаты значений в таблице 'alcohol'.")
@@ -105,12 +108,11 @@ def create_data_base():
     cur.execute('''CREATE TABLE IF NOT EXISTS about_me (
                             id INTEGER PRIMARY KEY,
                             id_person INTEGER,
-                            description TEXT,
-                            record_status BOOLEAN,
+                            description TEXT
                             FOREIGN KEY (id_person) REFERENCES person(id)
                         )''')
 
-    # Создание таблицы "фото" с внешним ключом на таблицу "about_me"
+    # Создание таблицы "фото" с внешним ключом на таблицу "person"
     cur.execute('''CREATE TABLE IF NOT EXISTS photo (
                             id_photo INTEGER PRIMARY KEY,
                             id_person INTEGER,
@@ -126,15 +128,14 @@ def create_data_base():
                             name TEXT,
                             age INTEGER,
                             id_gender INTEGER,
-                            id_goal INTEGER,
+                            id_target INTEGER,
                             city TEXT,
-                            id_zodiac_sign INTEGER,
                             height TEXT,
+                            id_zodiac_sign INTEGER,
                             id_education INTEGER,
                             id_children INTEGER,
                             id_smoking INTEGER,
                             id_alcohol INTEGER,
-                            verification BOOLEAN,
                             FOREIGN KEY (id_person) REFERENCES person(id),
                             FOREIGN KEY (id_gender) REFERENCES gender(id),
                             FOREIGN KEY (id_goal) REFERENCES goal(id),
@@ -249,14 +250,39 @@ def add_new_person(email, password):
         conn.close()
 
 
+# Сохранение записей о себе пользователя
+def save_about_me(about_me, id_person):
+    # return
+    # true - Удачно
+    # false - Ошибка
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        # Удалить все записи с таким же id_person
+        cur.execute('DELETE FROM about_me WHERE id_person = ?', (id_person,))
+
+        # Добавить новые записи
+        for description in about_me:
+            cur.execute('INSERT INTO about_me (id_person, description) VALUES (?, ?)', (id_person, description))
+
+        # Сохранить изменения в базе данных
+        conn.commit()
+
+        return True
+
+    except Exception as ex:
+        print(ex)
+        return False
+
+    finally:
+        conn.close()
 
 
-
-
-
-
-def set_person_info_data_base(id_person, name, age, gender, goal, city, zodiac_sign, height, education, children,
-                              smoking, alcohol, verification):
+# Сохранение данных о пользователе
+def save_person_info(id_person, name, age, gender, target, city, height,
+                     zodiac_sign, education, children, smoking, alcohol):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
@@ -318,8 +344,8 @@ def set_person_info_data_base(id_person, name, age, gender, goal, city, zodiac_s
             raise ValueError("Привычки к алкоголю {} не найдены в таблице alcohol".format(alcohol))
 
         # Вставка данных в таблицу person_info
-        cur.execute('''REPLACE INTO person_info (id_person, name, age, id_gender, id_goal, city, id_zodiac_sign, height, 
-                            id_education, id_children, id_smoking, id_alcohol, verification) 
+        cur.execute('''REPLACE INTO person_info (id_person, name, age, id_gender, id_goal, city, id_zodiac_sign, height,
+                            id_education, id_children, id_smoking, id_alcohol, verification)
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                     (id_person, name, age, id_gender, id_goal, city, id_zodiac_sign, height, id_education,
                      id_children, id_smoking, id_alcohol, verification))

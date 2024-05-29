@@ -28,6 +28,7 @@ def register_code():
     # Печатаем ответ от сервера
     print(response.text)
 
+
 def ai():
     url = 'http://127.0.0.1:5000/predict'
     data = {
@@ -39,4 +40,4 @@ def ai():
     response = requests.post(url, json=data)
     print(response.json())
 
-register()
+# register()

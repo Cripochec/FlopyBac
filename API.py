@@ -1,8 +1,7 @@
 from flask import Flask, request, jsonify
 import threading
 from smtp import key_generation, send_email
-from DB import (create_data_base, add_new_person, check_email, check_person_data_base, set_person_info_data_base,
-                get_person_info_data_base)
+from DB import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me)
 app = Flask(__name__)
 
 
@@ -78,17 +77,9 @@ def add_new_person_route():
         return jsonify({"status": 1})
 
 
-
-
-
-
-# Добавление нового пользователя
-
-
-
 # Добавление информации о пользователи
-@app.route('/set_persons_info', methods=['POST'])
-def set_persons_info():
+@app.route('/save_persons_info', methods=['POST'])
+def save_persons_info():
     # Получаем данные из запроса
     data = request.get_json()
 
@@ -96,38 +87,42 @@ def set_persons_info():
     name = data['name']
     age = data['age']
     gender = data['gender']
-    goal = data['goal']
+    target = data['target']
+    about_me = data['about_me']
     city = data['city']
-    zodiac_sign = data['zodiac_sign']
     height = data['height']
+    zodiac_sign = data['zodiac_sign']
     education = data['education']
     children = data['children']
     smoking = data['smoking']
     alcohol = data['alcohol']
-    verification = data['verification']
-
-    if set_person_info_data_base(id_person, name, age, gender, goal, city, zodiac_sign, height, education, children,
-                                 smoking, alcohol, verification):
-        return jsonify({"status": True})
+    about_me_status = save_about_me(about_me, id_person)
+    info_status = save_person_info(id_person, name, age, gender, target, city, height,
+                                   zodiac_sign, education, children, smoking, alcohol)
+    if info_status:
+        if about_me_status:
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
     else:
-        return jsonify({"status": False})
+        return jsonify({"status": 1})
 
 
-@app.route('/get_persons_info', methods=['POST'])
-def get_persons_info():
-    # Получаем данные из запроса
-    data = request.get_json()
-
-    id_person = data['id_person']
-
-    info = get_person_info_data_base(id_person)
-    if info['status']:
-        return jsonify({"status": True, "name": info['name'], "age": info['age'], "gender": info['gender'],
-                        "goal": info['goal'], "city": info['city'], "zodiac_sign": info['zodiac_sign'],
-                        "height": info['height'], "education": info['education'], "children": info['children'],
-                        "smoking": info['smoking'], "alcohol": info['alcohol'], "verification": info['verification']})
-    else:
-        return jsonify({"status": False})
+# @app.route('/get_persons_info', methods=['POST'])
+# def get_persons_info():
+#     # Получаем данные из запроса
+#     data = request.get_json()
+#
+#     id_person = data['id_person']
+#
+#     info = get_person_info_data_base(id_person)
+#     if info['status']:
+#         return jsonify({"status": True, "name": info['name'], "age": info['age'], "gender": info['gender'],
+#                         "goal": info['goal'], "city": info['city'], "zodiac_sign": info['zodiac_sign'],
+#                         "height": info['height'], "education": info['education'], "children": info['children'],
+#                         "smoking": info['smoking'], "alcohol": info['alcohol'], "verification": info['verification']})
+#     else:
+#         return jsonify({"status": False})
 
 
 if __name__ == '__main__':
