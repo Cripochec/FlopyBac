@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="update API AI">
+    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="update API">
+      <change afterPath="$PROJECT_DIR$/DB_SQLite.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/API.py" beforeDir="false" afterPath="$PROJECT_DIR$/API.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DB.py" beforeDir="false" afterPath="$PROJECT_DIR$/DB.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reqest.py" beforeDir="false" afterPath="$PROJECT_DIR$/reqest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,7 +39,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Project/barrier-master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Project/ProjectTimeAPI&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
   }
 }</component>
@@ -48,7 +48,7 @@
       <recent name="C:\Project\FlopyB" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.reqest">
+  <component name="RunManager" selected="Python.DB_SQLite">
     <configuration name="API" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="FlopyB" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -112,7 +112,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="clik" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="DB_SQLite" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="FlopyB" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -124,7 +124,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/clik.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DB_SQLite.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -177,11 +177,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.DB_SQLite" />
+        <item itemvalue="Python.DB" />
         <item itemvalue="Python.reqest" />
         <item itemvalue="Python.Ai" />
         <item itemvalue="Python.transform_dataset" />
-        <item itemvalue="Python.DB" />
-        <item itemvalue="Python.clik" />
       </list>
     </recent_temporary>
   </component>
@@ -218,7 +218,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715846831281</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="update API">
+      <option name="closed" value="true" />
+      <created>1716994900078</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1716994900078</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -235,17 +243,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="update AI (best 0.837)" />
     <MESSAGE value="update API AI" />
-    <option name="LAST_COMMIT_MESSAGE" value="update API AI" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/API.py</url>
-          <line>99</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="update API" />
+    <option name="LAST_COMMIT_MESSAGE" value="update API" />
   </component>
 </project>

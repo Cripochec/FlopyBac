@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
 import threading
 from smtp import key_generation, send_email
-from DB import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me)
+from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
+                       save_person_info, get_about_me_descriptions, get_person_info)
+
 app = Flask(__name__)
 
 
@@ -86,24 +88,48 @@ def save_persons_info():
     id_person = data['id_person']
     name = data['name']
     age = data['age']
-    gender = data['gender']
-    target = data['target']
+    id_gender = data['id_gender']
+    id_target = data['id_target']
     about_me = data['about_me']
     city = data['city']
     height = data['height']
-    zodiac_sign = data['zodiac_sign']
-    education = data['education']
-    children = data['children']
-    smoking = data['smoking']
-    alcohol = data['alcohol']
+    id_zodiac_sign = data['id_zodiac_sign']
+    id_education = data['id_education']
+    id_children = data['id_children']
+    id_smoking = data['id_smoking']
+    id_alcohol = data['id_alcohol']
+
     about_me_status = save_about_me(about_me, id_person)
-    info_status = save_person_info(id_person, name, age, gender, target, city, height,
-                                   zodiac_sign, education, children, smoking, alcohol)
+
+    info_status = save_person_info(id_person, name, age, id_gender, id_target, city, height, id_zodiac_sign,
+                                   id_education, id_children, id_smoking, id_alcohol)
     if info_status:
         if about_me_status:
             return jsonify({"status": 0})
         else:
             return jsonify({"status": 1})
+    else:
+        return jsonify({"status": 1})
+
+
+# Добавление информации о пользователи
+@app.route('/pars_persons_info', methods=['POST'])
+def pars_persons_info():
+    # Получаем данные из запроса
+    data = request.get_json()
+
+    id_person = data['id_person']
+
+    about_me_list = get_about_me_descriptions(id_person)
+    info_dict = get_person_info(id_person)
+
+    if info_dict is not None and about_me_list is not None:
+        return jsonify({"status": 0, "name": info_dict['name'], "age": info_dict['age'],
+                        "id_gender": info_dict['id_gender'], "id_target": info_dict['id_target'],
+                        "about_me": about_me_list, "city": info_dict['city'], "height": info_dict['height'],
+                        "id_zodiac_sign": info_dict['id_zodiac_sign'], "id_education": info_dict['id_education'],
+                        "id_children": info_dict['id_children'], "id_smoking": info_dict['id_smoking'],
+                        "id_alcohol": info_dict['id_alcohol']})
     else:
         return jsonify({"status": 1})
 
@@ -126,7 +152,6 @@ def save_persons_info():
 
 
 if __name__ == '__main__':
-
     create_data_base()
     # Запускаем сервер на всех доступных интерфейсах (0.0.0.0) и указываем порт 5000
     app.run(debug=True, host='0.0.0.0', port=5000)
