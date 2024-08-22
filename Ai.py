@@ -27,7 +27,6 @@ def calculate_common_interests(pair_records):
 def calculate_common_personal_preferences(pair_records):
     personal_human1 = pair_records['human1']['personal']
     personal_human2 = pair_records['human2']['personal']
-
     common_personal_preferences = sum(
         1 for pref in personal_human1.values() if pref != "" and pref in personal_human2.values())
     return common_personal_preferences

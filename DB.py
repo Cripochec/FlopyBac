@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 import MySQLdb
 
 db = MySQLdb.connect(
@@ -6,5 +6,5 @@ db = MySQLdb.connect(
      user="gen_user",
      passwd="B;+JsM/1\B(1n8",
      db="default_db",
-     port=3306
+     port=3306 
 )

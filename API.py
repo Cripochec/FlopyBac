@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify
 import threading
 from smtp import key_generation, send_email
 from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
-                       save_person_info, get_about_me_descriptions, get_person_info)
+                       save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables, get_photo,
+                       save_photo, swap_dominating, delete_photo_and_update_dominating)
 
 app = Flask(__name__)
 
@@ -112,7 +113,7 @@ def save_persons_info():
         return jsonify({"status": 1})
 
 
-# Добавление информации о пользователи
+# Отправка информации о пользователи
 @app.route('/pars_persons_info', methods=['POST'])
 def pars_persons_info():
     # Получаем данные из запроса
@@ -134,24 +135,87 @@ def pars_persons_info():
         return jsonify({"status": 1})
 
 
-# @app.route('/get_persons_info', methods=['POST'])
-# def get_persons_info():
+# Отправка фотографий пользователя
+@app.route('/pars_persons_photo', methods=['POST'])
+def pars_persons_photo():
+    # Получаем данные из запроса
+    data = request.get_json()
+
+    id_person = data['id_person']
+
+    photo_list = get_photo(id_person)
+
+    if photo_list is not None:
+        response_data = {"status": 0}
+
+        photo_list = sorted(photo_list, key=lambda x: x['dominating'])
+
+        # Добавляем фото данные в ответ
+        for i, photo in enumerate(photo_list, start=1):
+            response_data[f"photo{i}_url"] = photo['photo_url']
+
+        # Добавляем пустые значения для фото если их меньше 4
+        for i in range(len(photo_list) + 1, 5):
+            response_data[f"photo{i}_url"] = 'None'
+
+        return jsonify(response_data)
+    else:
+        return jsonify({"status": 1})
+
+
+# Сделать фото главным
+@app.route('/make_main_photo', methods=['POST'])
+def make_main_photo():
+    # Получаем данные из запроса
+    data = request.get_json()
+
+    id_person = data['id_person']
+    photo_url = data['photo_url']
+
+    if swap_dominating(id_person, photo_url):
+        return jsonify({"status": 0})
+    else:
+        return jsonify({"status": 1})
+
+
+# Удалтиь фото
+@app.route('/delete_photo', methods=['POST'])
+def delete_photo():
+    # Получаем данные из запроса
+    data = request.get_json()
+
+    id_person = data['id_person']
+    photo_url = data['photo_url']
+
+    if delete_photo_and_update_dominating(id_person, photo_url):
+        return jsonify({"status": 0})
+    else:
+        return jsonify({"status": 1})
+
+# Отправка фотографий пользователя
+# @app.route('/save_persons_photo', methods=['POST'])
+# def save_persons_photo():
 #     # Получаем данные из запроса
 #     data = request.get_json()
 #
 #     id_person = data['id_person']
+#     name_photo = data['name_photo']
+#     photo = data['photo']
+#     dominating = data['dominating']
 #
-#     info = get_person_info_data_base(id_person)
-#     if info['status']:
-#         return jsonify({"status": True, "name": info['name'], "age": info['age'], "gender": info['gender'],
-#                         "goal": info['goal'], "city": info['city'], "zodiac_sign": info['zodiac_sign'],
-#                         "height": info['height'], "education": info['education'], "children": info['children'],
-#                         "smoking": info['smoking'], "alcohol": info['alcohol'], "verification": info['verification']})
+#     save_photo(id_person, name_photo, dominating)
+#     upload_photo_to_s3(photo)
+#
+#     photo_list = get_photo(id_person)
+#
+#     if photo_list is not None:
+#         return jsonify({"status": 0, "photo_list": photo_list})
 #     else:
-#         return jsonify({"status": False})
+#         return jsonify({"status": 1})
 
 
 if __name__ == '__main__':
+    # drop_all_tables()
     create_data_base()
     # Запускаем сервер на всех доступных интерфейсах (0.0.0.0) и указываем порт 5000
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -1,7 +1,8 @@
 import sqlite3
 import ast
+import time
 
-from flask import json
+from API_YandexCloud import upload_photo_to_s3, get_photo_url, delete_photo_from_s3
 
 DB_NAME = 'database.db'
 
@@ -31,7 +32,8 @@ def create_data_base():
                             id INTEGER PRIMARY KEY,
                             id_person INTEGER,
                             photo_name TEXT,
-                            main BOOLEAN,
+                            photo_url TEXT,
+                            dominating INTEGER,
                             FOREIGN KEY (id_person) REFERENCES person(id)
                         )''')
 
@@ -274,3 +276,163 @@ def get_person_info(id_person):
 
     finally:
         conn.close()
+
+
+# Добавление фотографии в базу данных
+def save_photo(id_person, photo_name, photo_url, dominating):
+    # return
+    # true - Удачно
+    # false - Ошибка
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        # SQL-запрос на добавление записи
+        cur.execute('INSERT INTO photo (id_person, photo_name, photo_url, dominating) VALUES (?, ?, ?, ?)',
+                    (id_person, photo_name, photo_url, dominating))
+
+        # Сохранить изменения в базе данных
+        conn.commit()
+
+        return True
+    except Exception as ex:
+        print(ex)
+        return False
+    finally:
+        conn.close()
+
+
+# Получение фотографий из базы данных по id_person
+def get_photo(id_person):
+    # return
+    # photo_list - Удачно
+    # [] - Ошибка
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        # SQL-запрос для выборки всех фотографий по заданному id_person
+        cur.execute('SELECT photo_url, dominating FROM photo WHERE id_person = ?', (id_person,))
+        photos = cur.fetchall()
+
+        # Преобразование результата в список словарей
+        photo_list = [{"photo_url": photo[0], "dominating": photo[1]} for photo in photos]
+        return photo_list
+
+    except Exception as ex:
+        print(ex)
+        return []
+
+    finally:
+        conn.close()
+
+
+# Удаление фотографии из базы данных
+def delete_photo_and_update_dominating(id_person, photo_url):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        # Получаем значение dominating для удаляемой фотографии
+        cur.execute('SELECT dominating, photo_name FROM photo WHERE id_person = ? AND photo_url = ?',
+                    (id_person, photo_url))
+        row = cur.fetchone()
+
+        if row:
+            dominating_to_remove = row[0]
+            photo_name = row[1]
+
+            # Удаляем фотографию из базы данных
+            cur.execute('DELETE FROM photo WHERE id_person = ? AND photo_url = ?', (id_person, photo_url))
+
+            # Обновляем значения dominating для оставшихся фотографий
+            cur.execute('''UPDATE photo 
+                           SET dominating = dominating - 1 
+                           WHERE id_person = ? AND dominating > ?''', (id_person, dominating_to_remove))
+
+            # Удаляем фотографию из объектного хранилища
+            # delete_photo_from_s3(photo_name)
+
+            conn.commit()
+            return True
+
+        return False
+
+    except Exception as ex:
+        print(ex)
+        return False
+
+    finally:
+        conn.close()
+
+
+# Замена доминация у фотографии на главную
+def swap_dominating(id_person, photo_url_to_1):
+    # return
+    # true - Удачно
+    # false - Ошибка
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        # Получаем значение dominating для заданной фотографии
+        cur.execute('SELECT dominating FROM photo WHERE id_person = ? AND photo_url = ?', (id_person, photo_url_to_1))
+        row_to_1 = cur.fetchone()
+
+        if row_to_1:
+            dominating_to_1 = row_to_1[0]
+
+            # Получаем значение dominating для фотографии, у которой значение dominating равно 1
+            cur.execute('SELECT photo_url FROM photo WHERE id_person = ? AND dominating = 1', (id_person,))
+            row_with_1 = cur.fetchone()
+
+            if row_with_1:
+                photo_url_with_1 = row_with_1[0]
+
+                # Обновляем значение dominating для фотографии с dominating 1 на старое значение заданной фотографии
+                cur.execute('UPDATE photo SET dominating = ? WHERE id_person = ? AND photo_url = ?',
+                            (dominating_to_1, id_person, photo_url_with_1))
+
+            # Обновляем значение dominating для заданной фотографии на 1
+            cur.execute('UPDATE photo SET dominating = 1 WHERE id_person = ? AND photo_url = ?',
+                        (id_person, photo_url_to_1))
+
+            conn.commit()
+            return True
+
+        return False
+
+    except Exception as ex:
+        print(ex)
+        return False
+
+    finally:
+        conn.close()
+
+
+# upload_photo_to_s3("photo1.png", "photo1")
+# url = get_photo_url("photo1")
+# save_photo(1, "photo1", url, 3)
+#
+# upload_photo_to_s3("photo2.png", "photo2")
+# url = get_photo_url("photo2")
+# save_photo(1, "photo2", url, 2)
+#
+# upload_photo_to_s3("photo3.png", "photo3")
+# url = get_photo_url("photo3")
+# save_photo(1, "photo3", url, 1)
+
+# all_photo = get_photo(1)
+# print(all_photo)
+
+
+# delete_photo_and_update_dominating(1, "photo1")
+# delete_photo_and_update_dominating(1, "photo2")
+# delete_photo_and_update_dominating(1, "photo3")
+#
+# delete_photo_from_s3("photo1")
+# delete_photo_from_s3("photo2")
+# delete_photo_from_s3("photo3")
