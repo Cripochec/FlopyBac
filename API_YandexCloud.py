@@ -23,7 +23,7 @@ def delete_photo_from_s3(object_name):
         print(f"ERROR: YandexCloud, {e}")
 
 
-def upload_photo_to_s3(file_path, object_name):
+def upload_photo_to_s3(photo_data, object_name):
     # Создание клиента S3
     bucket_name = 'flopy-folder'
 
@@ -36,12 +36,17 @@ def upload_photo_to_s3(file_path, object_name):
     )
 
     try:
+        # Преобразуем данные изображения в поток
+        from io import BytesIO
+        image_stream = BytesIO(photo_data)
+
         # Загрузка файла в S3
-        s3_client.upload_file(file_path, bucket_name, object_name)
+        s3_client.upload_fileobj(image_stream, bucket_name, object_name)
+
     except FileNotFoundError:
-        print(f"Файл для загрузки в yandexCloud, {file_path}, не найден.")
+        print(f"Файл для загрузки в Yandex Cloud, {object_name}, не найден.")
     except NoCredentialsError:
-        print("Указаны неверные учетные данные YandexCloud.")
+        print("Указаны неверные учетные данные Yandex Cloud.")
     except Exception as e:
         print(f"ERROR: YandexCloud, {e}")
 

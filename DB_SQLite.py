@@ -1,6 +1,7 @@
 import sqlite3
 import ast
 import time
+import uuid
 
 from API_YandexCloud import upload_photo_to_s3, get_photo_url, delete_photo_from_s3
 
@@ -279,7 +280,7 @@ def get_person_info(id_person):
 
 
 # Добавление фотографии в базу данных
-def save_photo(id_person, photo_name, photo_url, dominating):
+def save_photo(id_person, photo, dominating):
     # return
     # true - Удачно
     # false - Ошибка
@@ -288,8 +289,15 @@ def save_photo(id_person, photo_name, photo_url, dominating):
     cur = conn.cursor()
 
     try:
-        # SQL-запрос на добавление записи
-        cur.execute('INSERT INTO photo (id_person, photo_name, photo_url, dominating) VALUES (?, ?, ?, ?)',
+        # Генерация уникального имени фотографии
+        photo_name = str(uuid.uuid4()) + ".jpg"  # Уникальное имя для фото
+
+        upload_photo_to_s3(photo, photo_name)
+        photo_url = get_photo_url(photo_name)
+
+        # Добавление записи в таблицу photo
+        cur.execute('''INSERT INTO photo (id_person, photo_name, photo_url, dominating) 
+                               VALUES (?, ?, ?, ?)''',
                     (id_person, photo_name, photo_url, dominating))
 
         # Сохранить изменения в базе данных
@@ -353,7 +361,7 @@ def delete_photo_and_update_dominating(id_person, photo_url):
                            WHERE id_person = ? AND dominating > ?''', (id_person, dominating_to_remove))
 
             # Удаляем фотографию из объектного хранилища
-            # delete_photo_from_s3(photo_name)
+            delete_photo_from_s3(photo_name)
 
             conn.commit()
             return True
@@ -411,28 +419,3 @@ def swap_dominating(id_person, photo_url_to_1):
 
     finally:
         conn.close()
-
-
-# upload_photo_to_s3("photo1.png", "photo1")
-# url = get_photo_url("photo1")
-# save_photo(1, "photo1", url, 3)
-#
-# upload_photo_to_s3("photo2.png", "photo2")
-# url = get_photo_url("photo2")
-# save_photo(1, "photo2", url, 2)
-#
-# upload_photo_to_s3("photo3.png", "photo3")
-# url = get_photo_url("photo3")
-# save_photo(1, "photo3", url, 1)
-
-# all_photo = get_photo(1)
-# print(all_photo)
-
-
-# delete_photo_and_update_dominating(1, "photo1")
-# delete_photo_and_update_dominating(1, "photo2")
-# delete_photo_and_update_dominating(1, "photo3")
-#
-# delete_photo_from_s3("photo1")
-# delete_photo_from_s3("photo2")
-# delete_photo_from_s3("photo3")

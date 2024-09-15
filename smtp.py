@@ -12,13 +12,10 @@ smtp_password = 'mmzudkqlfejbgsvk'
 
 def start_smtp_server():
     try:
-        print("Connecting to SMTP server...")
         server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
-        server.set_debuglevel(1)  # Enable debug output
+        server.set_debuglevel(0)  # debug output
         server.starttls()
-        print("Logging in...")
         server.login(smtp_username, smtp_password)
-        print("Connected and logged in.")
         return server
     except Exception as ex:
         print(f"ERROR: {ex}")

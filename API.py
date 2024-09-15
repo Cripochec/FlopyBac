@@ -1,5 +1,9 @@
+import base64
+
 from flask import Flask, request, jsonify
 import threading
+
+from API_YandexCloud import upload_photo_to_s3
 from smtp import key_generation, send_email
 from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
                        save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables, get_photo,
@@ -121,16 +125,29 @@ def pars_persons_info():
 
     id_person = data['id_person']
 
+    photo_list = get_photo(id_person)
     about_me_list = get_about_me_descriptions(id_person)
     info_dict = get_person_info(id_person)
 
-    if info_dict is not None and about_me_list is not None:
-        return jsonify({"status": 0, "name": info_dict['name'], "age": info_dict['age'],
+    if info_dict is not None and about_me_list is not None and photo_list is not None:
+        response_data = {"status": 0, "name": info_dict['name'], "age": info_dict['age'],
                         "id_gender": info_dict['id_gender'], "id_target": info_dict['id_target'],
                         "about_me": about_me_list, "city": info_dict['city'], "height": info_dict['height'],
                         "id_zodiac_sign": info_dict['id_zodiac_sign'], "id_education": info_dict['id_education'],
                         "id_children": info_dict['id_children'], "id_smoking": info_dict['id_smoking'],
-                        "id_alcohol": info_dict['id_alcohol']})
+                        "id_alcohol": info_dict['id_alcohol']}
+
+        photo_list = sorted(photo_list, key=lambda x: x['dominating'])
+
+        # Добавляем фото данные в ответ
+        for i, photo in enumerate(photo_list, start=1):
+            response_data[f"photo{i}_url"] = photo['photo_url']
+
+        # Добавляем пустые значения для фото если их меньше 4
+        for i in range(len(photo_list) + 1, 5):
+            response_data[f"photo{i}_url"] = 'None'
+
+        return jsonify(response_data)
     else:
         return jsonify({"status": 1})
 
@@ -179,6 +196,7 @@ def make_main_photo():
 
 
 # Удалтиь фото
+
 @app.route('/delete_photo', methods=['POST'])
 def delete_photo():
     # Получаем данные из запроса
@@ -192,26 +210,27 @@ def delete_photo():
     else:
         return jsonify({"status": 1})
 
-# Отправка фотографий пользователя
-# @app.route('/save_persons_photo', methods=['POST'])
-# def save_persons_photo():
-#     # Получаем данные из запроса
-#     data = request.get_json()
-#
-#     id_person = data['id_person']
-#     name_photo = data['name_photo']
-#     photo = data['photo']
-#     dominating = data['dominating']
-#
-#     save_photo(id_person, name_photo, dominating)
-#     upload_photo_to_s3(photo)
-#
-#     photo_list = get_photo(id_person)
-#
-#     if photo_list is not None:
-#         return jsonify({"status": 0, "photo_list": photo_list})
-#     else:
-#         return jsonify({"status": 1})
+
+# Сохранение новой фотографии пользователя
+@app.route('/save_persons_photo', methods=['POST'])
+def save_persons_photo():
+    id_person = request.form.get('id_person')
+    dominating = request.form.get('dominating')
+
+    # Получаем файл
+    photo_file = request.files.get('photo')
+
+    if not photo_file:
+        return jsonify({"status": 1})
+
+    # Чтение файла
+    photo_data = photo_file.read()
+
+    # Обработка и сохранение файла
+    if save_photo(id_person, photo_data, dominating):
+        return jsonify({"status": 0})
+    else:
+        return jsonify({"status": 1})
 
 
 if __name__ == '__main__':
