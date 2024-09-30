@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="code (server version)" />
+    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="code (server version 2)">
+      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -267,7 +269,15 @@
       <option name="project" value="LOCAL" />
       <updated>1727733355820</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="code (server version 2)">
+      <option name="closed" value="true" />
+      <created>1727733880872</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1727733880872</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -289,7 +299,8 @@
     <MESSAGE value="update code, full photo api is worked" />
     <MESSAGE value="update code" />
     <MESSAGE value="code (server version)" />
-    <option name="LAST_COMMIT_MESSAGE" value="code (server version)" />
+    <MESSAGE value="code (server version 2)" />
+    <option name="LAST_COMMIT_MESSAGE" value="code (server version 2)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
