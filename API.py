@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, request, jsonify
 import threading
 import datetime
@@ -8,6 +10,13 @@ from DB_SQLite import (create_data_base, add_new_person, check_email, check_pers
                        save_photo, swap_dominating, delete_photo_and_update_dominating, get_filtered_persons)
 
 app = Flask(__name__)
+
+
+# Обновление репозитория на сервере
+@app.route('/git_update_hook', methods=['POST'])
+def git_update():
+    os.system('/root/FlopyBac/git_update_hook.sh')
+    return 'Updated', 200
 
 
 # Вход в приложение

@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="update code, full photo api is worked">
-      <change afterPath="$PROJECT_DIR$/dz.py" afterDir="false" />
+    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="update code">
+      <change afterPath="$PROJECT_DIR$/FlopyBac.conf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/git_update_hook.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/wsgi.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/API.py" beforeDir="false" afterPath="$PROJECT_DIR$/API.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DB_SQLite.py" beforeDir="false" afterPath="$PROJECT_DIR$/DB_SQLite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -257,7 +257,15 @@
       <option name="project" value="LOCAL" />
       <updated>1726404199684</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="update code">
+      <option name="closed" value="true" />
+      <created>1727711889808</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1727711889808</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -275,17 +283,17 @@
     <MESSAGE value="update AI (best 0.837)" />
     <MESSAGE value="update API AI" />
     <MESSAGE value="update API" />
-    <MESSAGE value="update code" />
     <MESSAGE value="update code (API Yandex Cloud and any more)" />
     <MESSAGE value="update code, full photo api is worked" />
-    <option name="LAST_COMMIT_MESSAGE" value="update code, full photo api is worked" />
+    <MESSAGE value="update code" />
+    <option name="LAST_COMMIT_MESSAGE" value="update code" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>234</line>
+          <line>243</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -295,72 +303,72 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>244</line>
+          <line>253</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>258</line>
+          <line>267</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>257</line>
+          <line>266</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>259</line>
+          <line>268</line>
           <option name="timeStamp" value="9" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>260</line>
+          <line>269</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>261</line>
+          <line>270</line>
           <option name="timeStamp" value="11" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>263</line>
+          <line>272</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>264</line>
+          <line>273</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>265</line>
+          <line>274</line>
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>266</line>
+          <line>275</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>267</line>
+          <line>276</line>
           <option name="timeStamp" value="16" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>268</line>
+          <line>277</line>
           <option name="timeStamp" value="17" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>269</line>
+          <line>278</line>
           <option name="timeStamp" value="18" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>262</line>
+          <line>271</line>
           <option name="timeStamp" value="19" />
         </line-breakpoint>
       </breakpoints>
