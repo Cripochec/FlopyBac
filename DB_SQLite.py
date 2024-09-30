@@ -1,6 +1,6 @@
+import random
 import sqlite3
 import ast
-import time
 import uuid
 
 from API_YandexCloud import upload_photo_to_s3, get_photo_url, delete_photo_from_s3
@@ -419,3 +419,89 @@ def swap_dominating(id_person, photo_url_to_1):
 
     finally:
         conn.close()
+
+
+# Функция для получения списка пользователей по критериям
+def get_filtered_persons(min_age, max_age, gender, target, limit=10):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    # SQL-запрос с фильтрацией по возрасту, полу и цели
+    cur.execute('''
+        SELECT person_info.id_person, person_info.name, person_info.age, person_info.id_gender, 
+               person_info.id_target, person_info.city, person_info.height, person_info.id_zodiac_sign,
+               person_info.id_education, person_info.id_children, person_info.id_smoking, person_info.id_alcohol
+        FROM person_info
+        WHERE person_info.age BETWEEN ? AND ?
+          AND person_info.id_gender = ?
+          AND person_info.id_target = ?
+        LIMIT ?
+    ''', (min_age, max_age, gender, target, limit))
+
+    persons = cur.fetchall()
+    conn.close()
+
+    return persons
+
+
+# # Список возможных городов России
+# cities = ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород", "Челябинск",
+#           "Самара", "Ростов-на-Дону", "Омск"]
+#
+# # Список имён
+# names_male = ["Иван", "Алексей", "Максим", "Сергей", "Владимир", "Дмитрий", "Егор", "Андрей", "Николай", "Константин",
+#               "Роман", "Олег", "Артем"]
+# names_female = ["Анна", "Мария", "Екатерина", "София", "Дарья", "Ольга", "Юлия", "Ирина", "Наталья", "Елена", "Алиса",
+#                 "Виктория", "Вероника"]
+#
+# # Список ягод
+# berries = ["клубнику", "малину", "чернику", "ежевику", "клюкву", "вишню"]
+#
+# conn = sqlite3.connect(DB_NAME)
+# cur = conn.cursor()
+#
+# # Генерация 26 аккаунтов
+# for i in range(26):
+#     # Генерация email
+#     email = f"user{i + 1}@example.com"
+#     password = "12345678"
+#
+#     # Вставка данных в таблицу person
+#     cur.execute("INSERT INTO person (email, password) VALUES (?, ?)", (email, password))
+#     person_id = cur.lastrowid
+#
+#     # Выбор пола и имени
+#     if i < 13:  # Первая половина мужчины
+#         name = random.choice(names_male)
+#         gender = 1
+#     else:  # Вторая половина женщины
+#         name = random.choice(names_female)
+#         gender = 2
+#
+#     # Генерация остальной информации
+#     age = random.randint(18, 60)
+#     target = random.randint(0, 3)
+#     city = random.choice(cities)
+#     height = str(random.randint(160, 190)) + " см"
+#     zodiac_sign = random.randint(0, 11)
+#     education = random.randint(0, 3)
+#     children = random.randint(0, 2)
+#     smoking = random.randint(0, 2)
+#     alcohol = random.randint(0, 2)
+#
+#     # Вставка данных в таблицу person_info
+#     cur.execute('''INSERT INTO person_info (
+#                         id_person, name, age, id_gender, id_target, city, height, id_zodiac_sign, id_education, id_children, id_smoking, id_alcohol
+#                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+#                 (
+#                 person_id, name, age, gender, target, city, height, zodiac_sign, education, children, smoking, alcohol))
+#
+#     # Генерация "о себе"
+#     description = f"Я люблю {random.choice(berries)}"
+#     cur.execute("INSERT INTO about_me (id_person, description) VALUES (?, ?)", (person_id, description))
+#
+# # Сохранение изменений
+# conn.commit()
+#
+# # Закрытие соединения
+# conn.close()

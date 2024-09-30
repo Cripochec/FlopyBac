@@ -1,13 +1,11 @@
-import base64
-
 from flask import Flask, request, jsonify
 import threading
+import datetime
 
-from API_YandexCloud import upload_photo_to_s3
 from smtp import key_generation, send_email
 from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
                        save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables, get_photo,
-                       save_photo, swap_dominating, delete_photo_and_update_dominating)
+                       save_photo, swap_dominating, delete_photo_and_update_dominating, get_filtered_persons)
 
 app = Flask(__name__)
 
@@ -231,6 +229,51 @@ def save_persons_photo():
         return jsonify({"status": 0})
     else:
         return jsonify({"status": 1})
+
+
+# Маршрут для получения информации о пользователях
+@app.route('/pars_persons_list', methods=['POST'])
+def pars_persons_list():
+    # Получаем данные из запроса
+    data = request.get_json()
+    min_age = data.get('min_age')
+    max_age = data.get('max_age')
+    gender = data.get('id_gender')
+    target = data.get('id_target')
+
+    # Получаем список пользователей по критериям
+    persons_list = get_filtered_persons(min_age, max_age, gender, target)
+
+    response_list = []
+
+    # Формируем ответ для каждого пользователя
+    for person in persons_list:
+        (id_person, name, age, id_gender, id_target, city, height, id_zodiac_sign,
+         id_education, id_children, id_smoking, id_alcohol) = person
+
+        # Используем вашу функцию для получения описаний
+        about_me_list = get_about_me_descriptions(id_person)
+
+        response_data = {
+            "id_person": id_person,
+            "name": name,
+            "age": age,
+            "id_gender": id_gender,
+            "id_target": id_target,
+            "about_me": about_me_list,
+            "city": city,
+            "height": height,
+            "id_zodiac_sign": id_zodiac_sign,
+            "id_education": id_education,
+            "id_children": id_children,
+            "id_smoking": id_smoking,
+            "id_alcohol": id_alcohol
+        }
+
+        response_list.append(response_data)
+
+    # Возвращаем список пользователей в ответе
+    return jsonify({"status": 0, "persons": response_list})
 
 
 if __name__ == '__main__':
