@@ -4,13 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="update code">
-      <change afterPath="$PROJECT_DIR$/FlopyBac.conf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/git_update_hook.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/wsgi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/API.py" beforeDir="false" afterPath="$PROJECT_DIR$/API.py" afterDir="false" />
-    </list>
+    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="code (server version)" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -265,7 +259,15 @@
       <option name="project" value="LOCAL" />
       <updated>1727711889808</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="code (server version)">
+      <option name="closed" value="true" />
+      <created>1727733355820</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1727733355820</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -286,7 +288,8 @@
     <MESSAGE value="update code (API Yandex Cloud and any more)" />
     <MESSAGE value="update code, full photo api is worked" />
     <MESSAGE value="update code" />
-    <option name="LAST_COMMIT_MESSAGE" value="update code" />
+    <MESSAGE value="code (server version)" />
+    <option name="LAST_COMMIT_MESSAGE" value="code (server version)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
