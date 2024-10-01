@@ -15,7 +15,7 @@ app = Flask(__name__)
 # Обновление репозитория на сервере
 @app.route('/git_update_hook', methods=['POST'])
 def git_update():
-    os.system('/FlopyBac/git_update_hook.sh')
+    os.system('/root/FlopyBac/git_update_hook.sh')
     return 'Updated', 200
 
 
