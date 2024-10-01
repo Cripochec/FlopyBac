@@ -15,8 +15,11 @@ app = Flask(__name__)
 # Обновление репозитория на сервере
 @app.route('/git_update_hook', methods=['POST'])
 def git_update():
-    os.system('/root/FlopyBac/git_update_hook.sh')
-    return 'Updated', 200
+    try:
+        os.system('/root/FlopyBac/git_update_hook.sh')
+        return 'Updated', 200
+    except Exception as e:
+        return f'no updated error:{e}', 400
 
 
 # Вход в приложение
@@ -138,11 +141,11 @@ def pars_persons_info():
 
     if info_dict is not None and about_me_list is not None and photo_list is not None:
         response_data = {"status": 0, "name": info_dict['name'], "age": info_dict['age'],
-                        "id_gender": info_dict['id_gender'], "id_target": info_dict['id_target'],
-                        "about_me": about_me_list, "city": info_dict['city'], "height": info_dict['height'],
-                        "id_zodiac_sign": info_dict['id_zodiac_sign'], "id_education": info_dict['id_education'],
-                        "id_children": info_dict['id_children'], "id_smoking": info_dict['id_smoking'],
-                        "id_alcohol": info_dict['id_alcohol']}
+                         "id_gender": info_dict['id_gender'], "id_target": info_dict['id_target'],
+                         "about_me": about_me_list, "city": info_dict['city'], "height": info_dict['height'],
+                         "id_zodiac_sign": info_dict['id_zodiac_sign'], "id_education": info_dict['id_education'],
+                         "id_children": info_dict['id_children'], "id_smoking": info_dict['id_smoking'],
+                         "id_alcohol": info_dict['id_alcohol']}
 
         photo_list = sorted(photo_list, key=lambda x: x['dominating'])
 
