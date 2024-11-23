@@ -68,6 +68,7 @@ def create_data_base():
                                 id_children INTEGER,
                                 id_smoking INTEGER,
                                 id_alcohol INTEGER,
+                                fullness INTEGER,
                                 FOREIGN KEY (id_person) REFERENCES person(id)
                             )''')
 
@@ -241,7 +242,7 @@ def save_about_me(about_me, id_person):
 
 # Сохранение данных о пользователе
 def save_person_info(id_person, name, age, id_gender, id_target, city, height,
-                     id_zodiac_sign, id_education, id_children, id_smoking, id_alcohol):
+                     id_zodiac_sign, id_education, id_children, id_smoking, id_alcohol, fullness):
     # return
     # true - Удачно
     # false - Ошибка
@@ -254,10 +255,11 @@ def save_person_info(id_person, name, age, id_gender, id_target, city, height,
         cur.execute('DELETE FROM person_info WHERE id_person = ?', (id_person,))
 
         # Добавить новую запись
-        cur.execute('''INSERT INTO person_info (id_person, name, age, id_gender, id_target, city, id_zodiac_sign,
-         height, id_education, id_children, id_smoking, id_alcohol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        cur.execute('''INSERT INTO person_info (id_person, name, age, id_gender, id_target, city, id_zodiac_sign, 
+        height, id_education, id_children, id_smoking, id_alcohol, fullness) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+        ?, ?)''',
                     (id_person, name, age, id_gender, id_target, city, id_zodiac_sign, height, id_education,
-                     id_children, id_smoking, id_alcohol))
+                     id_children, id_smoking, id_alcohol, fullness))
 
         # Сохранить изменения в базе данных
         conn.commit()
@@ -317,7 +319,8 @@ def get_person_info(id_person):
                 "id_education": person_info[9],
                 "id_children": person_info[10],
                 "id_smoking": person_info[11],
-                "id_alcohol": person_info[12]
+                "id_alcohol": person_info[12],
+                "fullness": person_info[13]
             }
             return info_dict
         else:
@@ -331,37 +334,74 @@ def get_person_info(id_person):
         conn.close()
 
 
-# Добавление фотографии в базу данных
-def save_photo(id_person, photo, dominating):
-    # return
-    # true - Удачно
-    # false - Ошибка
+def update_person_photos(id_person, photos, files):
+    """
+    Обновляет данные о фотографиях человека:
+    1. Сохраняет фотографии с "file_path" в S3.
+    2. Обновляет "dominating" для фотографий с "url" в базе данных.
 
+    :param id_person: ID человека в базе данных.
+    :param photos: Список метаданных фотографий.
+                   Каждый элемент может содержать "file_path" или "url" и "dominating".
+    :param files: Список бинарных данных файлов, соответствующих "file_path".
+    """
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
     try:
-        # Генерация уникального имени фотографии
-        photo_name = str(uuid.uuid4()) + ".jpg"  # Уникальное имя для фото
+        file_index = 0  # Индекс для списка файлов
 
-        upload_photo_to_s3(photo, photo_name)
+        # Обрабатываем каждый элемент из списка метаданных
+        for photo_meta in photos:
+            dominating = photo_meta["dominating"]
 
-        photo_url = get_photo_url(photo_name)
+            # Обработка фото с "file_path" (загрузка в S3 и запись в базу)
+            if "file_path" in photo_meta:
+                # Убедимся, что файл для текущего "file_path" доступен
+                if file_index >= len(files):
+                    raise ValueError("Количество файлов меньше, чем ожидается по метаданным.")
 
-        # Добавление записи в таблицу photo
-        cur.execute('''INSERT INTO photo (id_person, photo_name, photo_url, dominating) 
-                               VALUES (?, ?, ?, ?)''',
-                    (id_person, photo_name, photo_url, dominating))
-        # Сохранить изменения в базе данных
+                photo_data = files[file_index]
+                file_index += 1  # Переходим к следующему файлу
+                photo_name = str(uuid.uuid4()) + ".jpg"
+
+                # Загружаем фото в S3
+                upload_photo_to_s3(photo_data, photo_name)
+
+                # Формируем URL фотографии
+                photo_url = get_photo_url(photo_name)
+
+                # Сохраняем данные о фото в базу
+                cur.execute(
+                    '''INSERT INTO photo (id_person, photo_name, photo_url, dominating) 
+                       VALUES (?, ?, ?, ?)''',
+                    (id_person, photo_name, photo_url, dominating)
+                )
+
+            # Обработка фото с "url" (обновление данных в базе)
+            elif "url" in photo_meta:
+                photo_url = photo_meta["url"]
+
+                # Обновляем значение dominating для фото
+                cur.execute(
+                    '''UPDATE photo
+                       SET dominating = ?
+                       WHERE id_person = ? AND photo_url = ?''',
+                    (dominating, id_person, photo_url)
+                )
+
+        # Сохраняем изменения
         conn.commit()
 
         return True
 
     except Exception as e:
-        log_error("save_photo", e)
+        logging.error(f"update_person_photos: {e}")
         return False
+
     finally:
         conn.close()
+
 
 
 # Получение фотографий из базы данных по id_person
@@ -385,90 +425,6 @@ def get_photo(id_person):
     except Exception as e:
         log_error("get_photo", e)
         return []
-
-    finally:
-        conn.close()
-
-
-# Удаление фотографии из базы данных
-def delete_photo_and_update_dominating(id_person, photo_url):
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-
-    try:
-        # Получаем значение dominating для удаляемой фотографии
-        cur.execute('SELECT dominating, photo_name FROM photo WHERE id_person = ? AND photo_url = ?',
-                    (id_person, photo_url))
-        row = cur.fetchone()
-
-        if row:
-            dominating_to_remove = row[0]
-            photo_name = row[1]
-
-            # Удаляем фотографию из базы данных
-            cur.execute('DELETE FROM photo WHERE id_person = ? AND photo_url = ?', (id_person, photo_url))
-
-            # Обновляем значения dominating для оставшихся фотографий
-            cur.execute('''UPDATE photo 
-                           SET dominating = dominating - 1 
-                           WHERE id_person = ? AND dominating > ?''', (id_person, dominating_to_remove))
-
-            # Удаляем фотографию из объектного хранилища
-            delete_photo_from_s3(photo_name)
-
-            conn.commit()
-            return True
-
-        return False
-
-    except Exception as e:
-        log_error("delete_photo_and_update_dominating", e)
-        return False
-
-    finally:
-        conn.close()
-
-
-# Замена доминация у фотографии на главную
-def swap_dominating(id_person, photo_url_to_1):
-    # return
-    # true - Удачно
-    # false - Ошибка
-
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-
-    try:
-        # Получаем значение dominating для заданной фотографии
-        cur.execute('SELECT dominating FROM photo WHERE id_person = ? AND photo_url = ?', (id_person, photo_url_to_1))
-        row_to_1 = cur.fetchone()
-
-        if row_to_1:
-            dominating_to_1 = row_to_1[0]
-
-            # Получаем значение dominating для фотографии, у которой значение dominating равно 1
-            cur.execute('SELECT photo_url FROM photo WHERE id_person = ? AND dominating = 1', (id_person,))
-            row_with_1 = cur.fetchone()
-
-            if row_with_1:
-                photo_url_with_1 = row_with_1[0]
-
-                # Обновляем значение dominating для фотографии с dominating 1 на старое значение заданной фотографии
-                cur.execute('UPDATE photo SET dominating = ? WHERE id_person = ? AND photo_url = ?',
-                            (dominating_to_1, id_person, photo_url_with_1))
-
-            # Обновляем значение dominating для заданной фотографии на 1
-            cur.execute('UPDATE photo SET dominating = 1 WHERE id_person = ? AND photo_url = ?',
-                        (id_person, photo_url_to_1))
-
-            conn.commit()
-            return True
-
-        return False
-
-    except Exception as e:
-        log_error("swap_dominating", e)
-        return False
 
     finally:
         conn.close()

@@ -1,15 +1,15 @@
 import os
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, json
 import threading
 import logging
 import datetime
 
 from smtp import key_generation, send_email
 from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
-                       save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables, get_photo,
-                       save_photo, swap_dominating, delete_photo_and_update_dominating, get_filtered_persons,
-                       update_incognito_status, get_incognito_status, delete_user_data)
+                       save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
+                       get_filtered_persons,
+                       update_incognito_status, get_incognito_status, delete_user_data, update_person_photos, get_photo)
 
 app = Flask(__name__)
 
@@ -161,20 +161,55 @@ def save_persons_info():
         id_children = data['id_children']
         id_smoking = data['id_smoking']
         id_alcohol = data['id_alcohol']
+        fullness = data['fullness']
 
         about_me_status = save_about_me(about_me, id_person)
 
         info_status = save_person_info(id_person, name, age, id_gender, id_target, city, height, id_zodiac_sign,
-                                       id_education, id_children, id_smoking, id_alcohol)
+                                       id_education, id_children, id_smoking, id_alcohol, fullness)
+
         if info_status:
             if about_me_status:
                 return jsonify({"status": 0})
             else:
-                return jsonify({"status": 1})
+                return jsonify({"status": 2})
         else:
             return jsonify({"status": 1})
     except Exception as e:
         log_error("/save_persons_info", e)
+        return jsonify({"status": 3})
+
+
+
+
+# это пиздец заебало меня
+# Путь, где будут сохраняться фотографии
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+
+@app.route('/save_persons_photos', methods=['POST'])
+def save_persons_photos():
+    try:
+        # Получаем данные из формы
+        photo_data = request.form.get('json')
+        photo_data_dict = json.loads(photo_data)
+        id_person = photo_data_dict.get("id_person", [])
+        photos = photo_data_dict.get("photos", [])
+
+        # Получаем файлы из запроса
+        files = [file.read() for file in request.files.getlist('photo')]
+
+        result = update_person_photos(id_person=id_person, photos=photos, files=files)
+
+        if result:
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"status": 2})
 
 
 # Отправка информации о пользователи
@@ -196,7 +231,7 @@ def pars_persons_info():
                              "about_me": about_me_list, "city": info_dict['city'], "height": info_dict['height'],
                              "id_zodiac_sign": info_dict['id_zodiac_sign'], "id_education": info_dict['id_education'],
                              "id_children": info_dict['id_children'], "id_smoking": info_dict['id_smoking'],
-                             "id_alcohol": info_dict['id_alcohol']}
+                             "id_alcohol": info_dict['id_alcohol'], "fullness": info_dict['fullness']}
 
             photo_list = sorted(photo_list, key=lambda x: x['dominating'])
 
@@ -213,103 +248,6 @@ def pars_persons_info():
             return jsonify({"status": 1})
     except Exception as e:
         log_error("/pars_persons_info", e)
-
-
-
-# # Сохранение новой фотографии пользователя
-# @app.route('/save_persons_photo', methods=['POST'])
-# def save_persons_photo():
-#     try:
-#         id_person = request.form.get('id_person')
-#         dominating = request.form.get('dominating')
-#
-#         # Получаем файл
-#         photo_file = request.files.get('photo')
-#
-#         if not photo_file:
-#             return jsonify({"status": 1})
-#
-#         # Чтение файла
-#         photo_data = photo_file.read()
-#
-#         # Обработка и сохранение файла
-#         if save_photo(id_person, photo_data, dominating):
-#
-#             return jsonify({"status": 0})
-#         else:
-#             return jsonify({"status": 1})
-#     except Exception as e:
-#         log_error("/save_persons_photo", e)
-#
-# # Отправка фотографий пользователя
-# @app.route('/pars_persons_photo', methods=['POST'])
-# def pars_persons_photo():
-#     try:
-#         # Получаем данные из запроса
-#         data = request.get_json()
-#
-#         id_person = data['id_person']
-#
-#         photo_list = get_photo(id_person)
-#
-#         if photo_list is not None:
-#             response_data = {"status": 0}
-#
-#             photo_list = sorted(photo_list, key=lambda x: x['dominating'])
-#
-#             # Добавляем фото данные в ответ
-#             for i, photo in enumerate(photo_list, start=1):
-#                 response_data[f"photo{i}_url"] = photo['photo_url']
-#
-#             # Добавляем пустые значения для фото если их меньше 4
-#             for i in range(len(photo_list) + 1, 5):
-#                 response_data[f"photo{i}_url"] = 'None'
-#
-#             return jsonify(response_data)
-#         else:
-#             return jsonify({"status": 1})
-#     except Exception as e:
-#         log_error("/pars_persons_photo", e)
-#
-#
-# # Сделать фото главным
-# @app.route('/make_main_photo', methods=['POST'])
-# def make_main_photo():
-#     try:
-#         # Получаем данные из запроса
-#         data = request.get_json()
-#
-#         id_person = data['id_person']
-#         photo_url = data['photo_url']
-#
-#         if swap_dominating(id_person, photo_url):
-#             return jsonify({"status": 0})
-#         else:
-#             return jsonify({"status": 1})
-#     except Exception as e:
-#         log_error("/make_main_photo", e)
-#
-#
-# # Удалтиь фото
-#
-# @app.route('/delete_photo', methods=['POST'])
-# def delete_photo():
-#     try:
-#         # Получаем данные из запроса
-#         data = request.get_json()
-#
-#         id_person = data['id_person']
-#         photo_url = data['photo_url']
-#
-#         if delete_photo_and_update_dominating(id_person, photo_url):
-#             return jsonify({"status": 0})
-#         else:
-#             return jsonify({"status": 1})
-#     except Exception as e:
-#         log_error("/delete_photo", e)
-#
-#
-
 
 
 # Отправления текущего статуса инкогнито пользователя

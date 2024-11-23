@@ -67,4 +67,4 @@ def get_photo_url(object_name):
         return url
 
     except Exception as e:
-        log_error(delete_photo_from_s3, e)
+        log_error("delete_photo_from_s3", e)
