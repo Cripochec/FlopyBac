@@ -2,77 +2,129 @@ import random
 import sqlite3
 import ast
 import uuid
+import logging
+import os
 
 from API_YandexCloud import upload_photo_to_s3, get_photo_url, delete_photo_from_s3
 
 DB_NAME = 'database.db'
 
+# Настройка логирования
+logging.basicConfig(
+    filename='LOGGING.log',
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
+
+
+def log_error(route_name, error):
+    logging.error(f' SERVER, DB_SQLite.py({route_name}): {error}')
+
 
 def create_data_base():
-    # Подключение к базе данных SQLite
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
+    try:
+        # Подключение к базе данных SQLite
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
 
-    # Создание таблицы "person"
-    cur.execute('''CREATE TABLE IF NOT EXISTS person (
-                        id INTEGER PRIMARY KEY,
-                        email TEXT NOT NULL UNIQUE,
-                        password TEXT NOT NULL
-                    )''')
-
-    # Создание таблицы "о себе" с внешним ключом на таблицу "person"
-    cur.execute('''CREATE TABLE IF NOT EXISTS about_me (
+        # Создание таблицы "person"
+        cur.execute('''CREATE TABLE IF NOT EXISTS person (
                             id INTEGER PRIMARY KEY,
-                            id_person INTEGER,
-                            description TEXT,
-                            FOREIGN KEY (id_person) REFERENCES person(id)
+                            email TEXT NOT NULL UNIQUE,
+                            password TEXT NOT NULL,
+                            incognito INTEGER NOT NULL DEFAULT 0
                         )''')
 
-    # Создание таблицы "фото" с внешним ключом на таблицу "person"
-    cur.execute('''CREATE TABLE IF NOT EXISTS photo (
-                            id INTEGER PRIMARY KEY,
-                            id_person INTEGER,
-                            photo_name TEXT,
-                            photo_url TEXT,
-                            dominating INTEGER,
-                            FOREIGN KEY (id_person) REFERENCES person(id)
-                        )''')
+        # Создание таблицы "о себе" с внешним ключом на таблицу "person"
+        cur.execute('''CREATE TABLE IF NOT EXISTS about_me (
+                                id INTEGER PRIMARY KEY,
+                                id_person INTEGER,
+                                description TEXT,
+                                FOREIGN KEY (id_person) REFERENCES person(id)
+                            )''')
 
-    # Создание таблицы "person_info" с внешними ключами
-    cur.execute('''CREATE TABLE IF NOT EXISTS person_info (
-                            id INTEGER PRIMARY KEY,
-                            id_person INTEGER,
-                            name TEXT,
-                            age INTEGER,
-                            id_gender INTEGER,
-                            id_target INTEGER,
-                            city TEXT,
-                            height TEXT,
-                            id_zodiac_sign INTEGER,
-                            id_education INTEGER,
-                            id_children INTEGER,
-                            id_smoking INTEGER,
-                            id_alcohol INTEGER,
-                            FOREIGN KEY (id_person) REFERENCES person(id)
-                        )''')
+        # Создание таблицы "фото" с внешним ключом на таблицу "person"
+        cur.execute('''CREATE TABLE IF NOT EXISTS photo (
+                                id INTEGER PRIMARY KEY,
+                                id_person INTEGER,
+                                photo_name TEXT,
+                                photo_url TEXT,
+                                dominating INTEGER,
+                                FOREIGN KEY (id_person) REFERENCES person(id)
+                            )''')
 
-    # Сохранение изменений и закрытие соединения
-    conn.commit()
-    conn.close()
+        # Создание таблицы "person_info" с внешними ключами
+        cur.execute('''CREATE TABLE IF NOT EXISTS person_info (
+                                id INTEGER PRIMARY KEY,
+                                id_person INTEGER,
+                                name TEXT,
+                                age INTEGER,
+                                id_gender INTEGER,
+                                id_target INTEGER,
+                                city TEXT,
+                                height TEXT,
+                                id_zodiac_sign INTEGER,
+                                id_education INTEGER,
+                                id_children INTEGER,
+                                id_smoking INTEGER,
+                                id_alcohol INTEGER,
+                                FOREIGN KEY (id_person) REFERENCES person(id)
+                            )''')
+
+        # Сохранение изменений и закрытие соединения
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        log_error("create_data_base", e)
 
 
 def drop_all_tables():
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+
+        # Удаление всех таблиц
+        cur.execute("DROP TABLE IF EXISTS person")
+        cur.execute("DROP TABLE IF EXISTS about_me")
+        cur.execute("DROP TABLE IF EXISTS photo")
+        cur.execute("DROP TABLE IF EXISTS person_info")
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        log_error("drop_all_tables", e)
+
+
+# Удаление пользователя из бд
+def delete_user_data(id_person):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    # Удаление всех таблиц
-    cur.execute("DROP TABLE IF EXISTS person")
-    cur.execute("DROP TABLE IF EXISTS about_me")
-    cur.execute("DROP TABLE IF EXISTS photo")
-    cur.execute("DROP TABLE IF EXISTS person_info")
+    try:
+        # Удаление данных из таблицы "about_me"
+        cur.execute('DELETE FROM about_me WHERE id_person = ?', (id_person,))
 
-    conn.commit()
-    conn.close()
+        # Удаление данных из таблицы "photo"
+        cur.execute('DELETE FROM photo WHERE id_person = ?', (id_person,))
+
+        # Удаление данных из таблицы "person_info"
+        cur.execute('DELETE FROM person_info WHERE id_person = ?', (id_person,))
+
+        # Удаление данных из таблицы "person"
+        cur.execute('DELETE FROM person WHERE id = ?', (id_person,))
+
+        # Сохранение изменений
+        conn.commit()
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        log_error("delete_user_data", e)
+        return False
+
+    finally:
+        if conn:
+            conn.close()
 
 
 # Вход в приложение
@@ -97,8 +149,8 @@ def check_person_data_base(email, password):
                 return {"status": 2}
         else:
             return {"status": 1}
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("check_person_data_base", e)
         return {"status": 3}
     finally:
         conn.close()
@@ -122,8 +174,8 @@ def check_email(email):
         else:
             return 1
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("check_email", e)
         return 2
     finally:
         conn.close()
@@ -146,8 +198,8 @@ def add_new_person(email, password):
 
         return {"status": 0, "id_person": user_id}
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("add_new_person", e)
         return {"status": 1}
     finally:
         conn.close()
@@ -179,8 +231,8 @@ def save_about_me(about_me, id_person):
 
         return True
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("save_about_me", e)
         return False
 
     finally:
@@ -212,8 +264,8 @@ def save_person_info(id_person, name, age, id_gender, id_target, city, height,
 
         return True
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("save_person_info", e)
         return False
 
     finally:
@@ -234,8 +286,8 @@ def get_about_me_descriptions(id_person):
         description_list = [description[0] for description in descriptions]
         return description_list
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("get_about_me_descriptions", e)
         return []
 
     finally:
@@ -271,8 +323,8 @@ def get_person_info(id_person):
         else:
             return None
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("get_person_info", e)
         return None
 
     finally:
@@ -293,19 +345,20 @@ def save_photo(id_person, photo, dominating):
         photo_name = str(uuid.uuid4()) + ".jpg"  # Уникальное имя для фото
 
         upload_photo_to_s3(photo, photo_name)
+
         photo_url = get_photo_url(photo_name)
 
         # Добавление записи в таблицу photo
         cur.execute('''INSERT INTO photo (id_person, photo_name, photo_url, dominating) 
                                VALUES (?, ?, ?, ?)''',
                     (id_person, photo_name, photo_url, dominating))
-
         # Сохранить изменения в базе данных
         conn.commit()
 
         return True
-    except Exception as ex:
-        print(ex)
+
+    except Exception as e:
+        log_error("save_photo", e)
         return False
     finally:
         conn.close()
@@ -329,8 +382,8 @@ def get_photo(id_person):
         photo_list = [{"photo_url": photo[0], "dominating": photo[1]} for photo in photos]
         return photo_list
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("get_photo", e)
         return []
 
     finally:
@@ -368,8 +421,8 @@ def delete_photo_and_update_dominating(id_person, photo_url):
 
         return False
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("delete_photo_and_update_dominating", e)
         return False
 
     finally:
@@ -413,9 +466,49 @@ def swap_dominating(id_person, photo_url_to_1):
 
         return False
 
-    except Exception as ex:
-        print(ex)
+    except Exception as e:
+        log_error("swap_dominating", e)
         return False
+
+    finally:
+        conn.close()
+
+
+# Замена статуса инкогнито у пользователя
+def update_incognito_status(id_person, incognito_status):
+    # return
+    # true - Удачно
+    # false - Ошибка
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    try:
+        # SQL запрос для обновления поля incognito
+        cur.execute('''UPDATE person
+                       SET incognito = ?
+                       WHERE id = ?''', (incognito_status, id_person))
+        conn.commit()
+        return True
+
+    except Exception as e:
+        log_error("update_incognito_status", e)
+        return False
+
+    finally:
+        conn.close()
+
+
+def get_incognito_status(user_id):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    try:
+        # SQL запрос для обновления поля incognito
+        cur.execute('''SELECT incognito FROM person WHERE id = ?''', (user_id,))
+        result = cur.fetchone()
+        return result[0]
+
+    except Exception as e:
+        log_error("get_incognito_status", e)
+        return None
 
     finally:
         conn.close()
@@ -425,23 +518,32 @@ def swap_dominating(id_person, photo_url_to_1):
 def get_filtered_persons(min_age, max_age, gender, target, limit=10):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
+    try:
+        # SQL-запрос с фильтрацией по возрасту, полу и цели
+        cur.execute('''
+            SELECT person_info.id_person, person_info.name, person_info.age, person_info.id_gender, 
+                   person_info.id_target, person_info.city, person_info.height, person_info.id_zodiac_sign,
+                   person_info.id_education, person_info.id_children, person_info.id_smoking, person_info.id_alcohol
+            FROM person_info
+            WHERE person_info.age BETWEEN ? AND ?
+              AND person_info.id_gender = ?
+              AND person_info.id_target = ?
+            LIMIT ?
+        ''', (min_age, max_age, gender, target, limit))
 
-    # SQL-запрос с фильтрацией по возрасту, полу и цели
-    cur.execute('''
-        SELECT person_info.id_person, person_info.name, person_info.age, person_info.id_gender, 
-               person_info.id_target, person_info.city, person_info.height, person_info.id_zodiac_sign,
-               person_info.id_education, person_info.id_children, person_info.id_smoking, person_info.id_alcohol
-        FROM person_info
-        WHERE person_info.age BETWEEN ? AND ?
-          AND person_info.id_gender = ?
-          AND person_info.id_target = ?
-        LIMIT ?
-    ''', (min_age, max_age, gender, target, limit))
+        persons = cur.fetchall()
+        return persons
 
-    persons = cur.fetchall()
-    conn.close()
+    except Exception as e:
+        log_error("get_filtered_persons", e)
+        return False
 
-    return persons
+    finally:
+        conn.close()
+
+
+# drop_all_tables()
+# create_data_base()
 
 
 # # Список возможных городов России

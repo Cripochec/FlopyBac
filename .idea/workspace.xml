@@ -5,7 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="test 10 auto update cod in server">
+      <change afterPath="$PROJECT_DIR$/LOGGING.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API.py" beforeDir="false" afterPath="$PROJECT_DIR$/API.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API_YandexCloud.py" beforeDir="false" afterPath="$PROJECT_DIR$/API_YandexCloud.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cloud-init.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DB_SQLite.py" beforeDir="false" afterPath="$PROJECT_DIR$/DB_SQLite.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dz.py" beforeDir="false" afterPath="$PROJECT_DIR$/dz.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,7 +47,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Project/NYC_ML&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.project&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -51,7 +59,7 @@
       <recent name="C:\Project\FlopyB\PredictorAI" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.DB_SQLite">
+  <component name="RunManager" selected="Python.dz">
     <configuration name="API (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="FlopyB" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -180,8 +188,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.DB_SQLite" />
         <item itemvalue="Python.dz" />
+        <item itemvalue="Python.DB_SQLite" />
         <item itemvalue="Python.API (1)" />
         <item itemvalue="Python.test" />
         <item itemvalue="Python.API_YandexCloud" />
@@ -381,7 +389,31 @@
       <option name="project" value="LOCAL" />
       <updated>1727785051420</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="test 10 auto update cod in server">
+      <option name="closed" value="true" />
+      <created>1727785249734</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1727785249734</updated>
+    </task>
+    <task id="LOCAL-00025" summary="test 10 auto update cod in server">
+      <option name="closed" value="true" />
+      <created>1727785357491</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1727785357491</updated>
+    </task>
+    <task id="LOCAL-00026" summary="test 10 auto update cod in server">
+      <option name="closed" value="true" />
+      <created>1727785592250</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1727785592250</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -421,82 +453,82 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>246</line>
+          <line>359</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/DB_SQLite.py</url>
-          <line>424</line>
+          <line>517</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>256</line>
+          <line>370</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>270</line>
+          <line>384</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>269</line>
+          <line>383</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>271</line>
+          <line>385</line>
           <option name="timeStamp" value="9" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>272</line>
+          <line>386</line>
           <option name="timeStamp" value="10" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>273</line>
+          <line>387</line>
           <option name="timeStamp" value="11" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>275</line>
+          <line>389</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>276</line>
+          <line>390</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>277</line>
+          <line>391</line>
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>278</line>
+          <line>392</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>279</line>
+          <line>393</line>
           <option name="timeStamp" value="16" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>280</line>
+          <line>394</line>
           <option name="timeStamp" value="17" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>281</line>
+          <line>395</line>
           <option name="timeStamp" value="18" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>274</line>
+          <line>388</line>
           <option name="timeStamp" value="19" />
         </line-breakpoint>
       </breakpoints>
