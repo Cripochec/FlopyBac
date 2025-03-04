@@ -4,16 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="New Point, working profile ALL">
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/TEST.py" afterDir="false" />
+    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="A lot of work has been done, the stage of like and dislike">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/API.py" beforeDir="false" afterPath="$PROJECT_DIR$/API.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DB_SQLite.py" beforeDir="false" afterPath="$PROJECT_DIR$/DB_SQLite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LOGGING.log" beforeDir="false" afterPath="$PROJECT_DIR$/LOGGING.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dz.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/smtp.py" beforeDir="false" afterPath="$PROJECT_DIR$/smtp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/xxxxxxxxxxxxxxxxxxxxxxx.txt" beforeDir="false" afterPath="$PROJECT_DIR$/yyyyyyyyyyyyyyyyyyyyyyy.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -430,7 +423,15 @@
       <option name="project" value="LOCAL" />
       <updated>1732341630257</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="A lot of work has been done, the stage of like and dislike">
+      <option name="closed" value="true" />
+      <created>1741079191595</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1741079191595</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -465,7 +466,8 @@
     <MESSAGE value="test 10 auto update cod in server" />
     <MESSAGE value="BasicPoint" />
     <MESSAGE value="New Point, working profile ALL" />
-    <option name="LAST_COMMIT_MESSAGE" value="New Point, working profile ALL" />
+    <MESSAGE value="A lot of work has been done, the stage of like and dislike" />
+    <option name="LAST_COMMIT_MESSAGE" value="A lot of work has been done, the stage of like and dislike" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
