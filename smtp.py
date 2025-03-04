@@ -1,8 +1,9 @@
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.header import Header
 import random
 import smtplib
-
+import threading
 
 smtp_server = 'smtp.yandex.ru'
 smtp_port = 587
@@ -29,9 +30,13 @@ def send_email(to_email, subject, message):
             msg = MIMEMultipart()
             msg['From'] = smtp_username
             msg['To'] = to_email
-            msg['Subject'] = subject
-            msg.attach(MIMEText(f'<div style="text-align: center;">{message}</div>', 'html'))
-            server.sendmail(smtp_username, to_email, msg.as_string())
+            msg['Subject'] = Header(subject, 'utf-8')  # Указываем кодировку темы письма
+
+            # Добавляем тело письма с кодировкой utf-8
+            msg.attach(MIMEText(f'<div style="text-align: center;">{message}</div>', 'html', 'utf-8'))
+
+            # Отправляем сообщение в байтовом формате
+            server.sendmail(smtp_username, to_email, msg.as_bytes())
             server.quit()
             return 0
         else:

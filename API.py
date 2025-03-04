@@ -9,7 +9,10 @@ from smtp import key_generation, send_email
 from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
                        save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
                        get_filtered_persons,
-                       update_incognito_status, get_incognito_status, delete_user_data, update_person_photos, get_photo)
+                       update_incognito_status, get_incognito_status, delete_user_data, get_photo,
+                       add_to_black_list, get_all_blocked_users, remove_from_black_list, get_notification_person,
+                       set_notification_person, update_password, update_person_photos, add_person_photos,
+                       dell_person_photos_in_s3)
 
 app = Flask(__name__)
 
@@ -129,16 +132,97 @@ def add_new_person_route():
 
         info = add_new_person(email, password)
 
+
+
+
         # status:
         # 0 - успешно
         # 1 - ошибка сервера
 
-        if info['status'] == 0:
+        # + Добавления информации о уведомлениях для пользователя
+        if info['status'] == 0 and set_notification_person(info['id_person']):
             return jsonify({"status": 0, "id_person": info['id_person']})
         else:
             return jsonify({"status": 1})
     except Exception as e:
         log_error("/add_new_person_route", e)
+
+
+# Восстановление пароля, проверка email пользователя и отправка разового кода
+@app.route('/resurrect_email', methods=['POST'])
+def resurrect_email():
+    try:
+        # Получаем данные из запроса
+        data = request.get_json()
+
+        email = data['email']
+
+        status = check_email(email)
+
+        # status:
+        # 0 - email не занят
+        # 1 - успешно
+        # 3 - ошибка сервера
+
+        if status == 0:
+            return jsonify({"status": 0})
+        elif status == 1:
+            code = key_generation()
+            # Вызываем функцию send_email в отдельном потоке
+            email_thread = threading.Thread(target=send_email, args=(email, "Восстановление доступа Flopy",
+                                                                     "Разовый код: " + str(code)))
+            email_thread.start()
+
+            return jsonify({"status": 1, "code": code})
+        else:
+            return jsonify({"status": 3})
+    except Exception as e:
+        log_error("/resurrect_email", e)
+
+
+# Повторная отправка разового кода
+@app.route('/one_time_code', methods=['POST'])
+def one_time_code():
+    try:
+        # Получаем данные из запроса
+        data = request.get_json()
+
+        email = data['email']
+
+        code = key_generation()
+        # Вызываем функцию send_email в отдельном потоке
+        email_thread = threading.Thread(target=send_email, args=(email, "Код доступа Flopy",
+                                                                 "Разовый код: " + str(code)))
+        email_thread.start()
+
+        return jsonify({"code": code})
+
+    except Exception as e:
+        log_error("/one_time_code", e)
+
+
+# Замена пароля пользователя
+@app.route('/new_password', methods=['POST'])
+def new_password():
+    try:
+        # Получаем данные из запроса
+        data = request.get_json()
+
+        email = data['email']
+        password = data['password']
+
+        status = update_password(email, password)
+
+        # status:
+        # 0 - успешно
+        # 1 - ошибка сервера
+
+        if status == 0:
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+    except Exception as e:
+        log_error("/new_password", e)
 
 
 # Добавление информации о пользователи
@@ -180,13 +264,22 @@ def save_persons_info():
         return jsonify({"status": 3})
 
 
+@app.route('/update_persons_photos', methods=['POST'])
+def update_persons_photos():
+    try:
+        # Получаем данные из формы
+        data = request.get_json()
+        id_person = data['id_person']
+        photos = data['photos']
 
-
-# это пиздец заебало меня
-# Путь, где будут сохраняться фотографии
-UPLOAD_FOLDER = 'uploads'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+        # Обновление данных о фотографиях
+        if update_person_photos(id_person, photos):
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+    except Exception as e:
+        log_error("/update_persons_photos", e)
+        return jsonify({"status": 2})
 
 
 @app.route('/save_persons_photos', methods=['POST'])
@@ -194,21 +287,22 @@ def save_persons_photos():
     try:
         # Получаем данные из формы
         photo_data = request.form.get('json')
+
+        # Преобразуем строку JSON в словарь
         photo_data_dict = json.loads(photo_data)
         id_person = photo_data_dict.get("id_person", [])
         photos = photo_data_dict.get("photos", [])
 
         # Получаем файлы из запроса
-        files = [file.read() for file in request.files.getlist('photo')]
+        files = [{"filename": file.filename, "content": file.read()} for file in request.files.getlist('photo')]
 
-        result = update_person_photos(id_person=id_person, photos=photos, files=files)
-
-        if result:
+        # Обновление данных о фотографиях
+        if add_person_photos(id_person, photos, files):
             return jsonify({"status": 0})
         else:
             return jsonify({"status": 1})
     except Exception as e:
-        print(f"Error: {e}")
+        log_error("/save_persons_photos", e)  # Логирование ошибки
         return jsonify({"status": 2})
 
 
@@ -288,13 +382,118 @@ def delete_account():
     try:
         id_person = request.json.get('id_person')
 
-        if delete_user_data(id_person):
+        if dell_person_photos_in_s3(id_person) and delete_user_data(id_person):
             return jsonify({"status": 0})
         else:
             return jsonify({"status": 1})
 
     except Exception as e:
         log_error("/delete_account", e)
+
+
+# Добавления пользоватля в чёрный список
+@app.route('/add_black_list', methods=['POST'])
+def add_black_list():
+    try:
+        id_person = request.json.get('id_person')
+        id_block = request.json.get('id_block')
+
+        if add_to_black_list(id_person, id_block):
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as ex:
+        log_error("/add_black_list", ex)
+        return jsonify({"status": 2})
+
+
+# Добавления пользоватля в чёрный список
+@app.route('/remove_black_list', methods=['POST'])
+def remove_black_list():
+    try:
+        id_person = request.json.get('id_person')
+        id_block = request.json.get('id_block')
+
+        if remove_from_black_list(id_person, id_block):
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as ex:
+        log_error("/remove_black_list", ex)
+        return jsonify({"status": 2})
+
+
+# Получение чёрного списка пользоватля
+@app.route('/get_blocked_users', methods=['POST'])
+def get_blocked_users():
+    try:
+        id_person = request.json.get('id_person')
+
+        block_list = get_all_blocked_users(id_person)
+        if block_list is not None:
+            return jsonify({"status": 0, "block_list": block_list})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as ex:
+        log_error("/get_blocked_users", ex)
+        return jsonify({"status": 2})
+
+
+# Отправка данных о рассылки уведомлений для пользователя
+@app.route('/get_notification', methods=['POST'])
+def get_notification():
+    try:
+        id_person = request.json.get('id_person')
+
+        notification = get_notification_person(id_person)
+        if notification is not None:
+            return jsonify({"status": 0, "like": notification['like'],
+                            "match": notification['match'], "chat": notification['chat']})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as ex:
+        log_error("/get_notification", ex)
+        return jsonify({"status": 2})
+
+
+# Получение данных о рассылки уведомлений для пользователя
+@app.route('/set_notification', methods=['POST'])
+def set_notification():
+    try:
+        id_person = request.json.get('id_person')
+        like = request.json.get('like')
+        match = request.json.get('match')
+        chat = request.json.get('chat')
+
+        if set_notification_person(id_person, like, match, chat):
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as ex:
+        log_error("/set_notification", ex)
+        return jsonify({"status": 2})
+
+
+# Пользователь поставил лайк
+# @app.route('/like_person', methods=['POST'])
+# def like_person():
+    # try:
+    #     id_person = request.json.get('id_person')
+    #     id_second_person = request.json.get('id_second_person')
+    #
+    #     if set_notification_person(id_person, like, match, chat):
+    #         return jsonify({"status": 0})
+    #     else:
+    #         return jsonify({"status": 1})
+    #
+    # except Exception as ex:
+    #     log_error("/set_notification", ex)
+    #     return jsonify({"status": 2})
 
 
 # Маршрут для получения информации о пользователях
@@ -315,18 +514,17 @@ def pars_persons_list():
 
         # Формируем ответ для каждого пользователя
         for person in persons_list:
-            (id_person, name, age, id_gender, id_target, city, height, id_zodiac_sign,
+            (id_person, name, age, city, height, id_zodiac_sign,
              id_education, id_children, id_smoking, id_alcohol) = person
 
             # Используем вашу функцию для получения описаний
             about_me_list = get_about_me_descriptions(id_person)
+            photo_list = get_photo(id_person)
 
             response_data = {
                 "id_person": id_person,
                 "name": name,
                 "age": age,
-                "id_gender": id_gender,
-                "id_target": id_target,
                 "about_me": about_me_list,
                 "city": city,
                 "height": height,
@@ -336,6 +534,14 @@ def pars_persons_list():
                 "id_smoking": id_smoking,
                 "id_alcohol": id_alcohol
             }
+
+            # Добавляем фото данные в ответ
+            for i, photo in enumerate(photo_list, start=1):
+                response_data[f"photo{i}_url"] = photo['photo_url']
+
+            # Добавляем пустые значения для фото если их меньше 4
+            for i in range(len(photo_list) + 1, 5):
+                response_data[f"photo{i}_url"] = 'None'
 
             response_list.append(response_data)
 

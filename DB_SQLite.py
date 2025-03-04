@@ -72,6 +72,46 @@ def create_data_base():
                                 FOREIGN KEY (id_person) REFERENCES person(id)
                             )''')
 
+        # Создание таблицы "black_list"
+        cur.execute('''CREATE TABLE IF NOT EXISTS black_list (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    id_person INTEGER NOT NULL,
+                                    id_block INTEGER NOT NULL,
+                                    FOREIGN KEY (id_person) REFERENCES person(id),
+                                    FOREIGN KEY (id_block) REFERENCES person(id),
+                                    UNIQUE (id_person, id_block)
+                                )''')
+
+        # Создание таблицы "notification" с внешними ключами
+        cur.execute('''CREATE TABLE IF NOT EXISTS notification (
+                                    id INTEGER PRIMARY KEY,
+                                    id_person INTEGER UNIQUE,
+                                    like INTEGER NOT NULL DEFAULT 1,
+                                    match INTEGER NOT NULL DEFAULT 1,
+                                    chat INTEGER NOT NULL DEFAULT 1,
+                                    FOREIGN KEY (id_person) REFERENCES person(id)
+                                )''')
+
+        # Создание таблицы "likes"
+        cur.execute('''CREATE TABLE IF NOT EXISTS likes (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    id_person INTEGER NOT NULL,
+                                    id_liked INTEGER NOT NULL,
+                                    FOREIGN KEY (id_person) REFERENCES person(id),
+                                    FOREIGN KEY (id_liked) REFERENCES person(id),
+                                    UNIQUE (id_person, id_liked)
+                                )''')
+
+        # Создание таблицы "dislikes"
+        cur.execute('''CREATE TABLE IF NOT EXISTS dislikes (
+                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                    id_person INTEGER NOT NULL,
+                                    id_disliked INTEGER NOT NULL,
+                                    FOREIGN KEY (id_person) REFERENCES person(id),
+                                    FOREIGN KEY (id_disliked) REFERENCES person(id),
+                                    UNIQUE (id_person, id_disliked)
+                                )''')
+
         # Сохранение изменений и закрытие соединения
         conn.commit()
         conn.close()
@@ -89,6 +129,10 @@ def drop_all_tables():
         cur.execute("DROP TABLE IF EXISTS about_me")
         cur.execute("DROP TABLE IF EXISTS photo")
         cur.execute("DROP TABLE IF EXISTS person_info")
+        cur.execute("DROP TABLE IF EXISTS black_list")
+        cur.execute("DROP TABLE IF EXISTS notification")
+        cur.execute("DROP TABLE IF EXISTS likes")
+        cur.execute("DROP TABLE IF EXISTS dislikes")
 
         conn.commit()
         conn.close()
@@ -102,6 +146,9 @@ def delete_user_data(id_person):
     cur = conn.cursor()
 
     try:
+        # Удаление данных из таблицы "person"
+        cur.execute('DELETE FROM person WHERE id = ?', (id_person,))
+
         # Удаление данных из таблицы "about_me"
         cur.execute('DELETE FROM about_me WHERE id_person = ?', (id_person,))
 
@@ -111,8 +158,17 @@ def delete_user_data(id_person):
         # Удаление данных из таблицы "person_info"
         cur.execute('DELETE FROM person_info WHERE id_person = ?', (id_person,))
 
-        # Удаление данных из таблицы "person"
-        cur.execute('DELETE FROM person WHERE id = ?', (id_person,))
+        # Удаление данных из таблицы "black_list"
+        cur.execute('DELETE FROM black_list WHERE id_person = ?', (id_person,))
+
+        # Удаление данных из таблицы "notification"
+        cur.execute('DELETE FROM notification WHERE id_person = ?', (id_person,))
+
+        # Удаление данных из таблицы "likes"
+        cur.execute('DELETE FROM likes WHERE id_person = ?', (id_person,))
+
+        # Удаление данных из таблицы "dislikes"
+        cur.execute('DELETE FROM dislikes WHERE id_person = ?', (id_person,))
 
         # Сохранение изменений
         conn.commit()
@@ -202,6 +258,34 @@ def add_new_person(email, password):
     except Exception as e:
         log_error("add_new_person", e)
         return {"status": 1}
+    finally:
+        conn.close()
+
+
+# Обновление пароля пользователя
+def update_password(email, new_password):
+    # return
+    # 0 - Удачно
+    # 1 - Ошибка (например, если email не найден)
+
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        # Обновляем пароль пользователя с указанным email
+        cur.execute('UPDATE person SET password = ? WHERE email = ?', (new_password, email))
+
+        if cur.rowcount == 0:  # Если email не найден
+            log_error("update_password", "Email not found")
+            return 1
+
+        conn.commit()
+        return 0
+
+    except Exception as e:
+        log_error("update_password", e)
+        return {"status": 2, "error": str(e)}
+
     finally:
         conn.close()
 
@@ -334,17 +418,58 @@ def get_person_info(id_person):
         conn.close()
 
 
-def update_person_photos(id_person, photos, files):
-    """
-    Обновляет данные о фотографиях человека:
-    1. Сохраняет фотографии с "file_path" в S3.
-    2. Обновляет "dominating" для фотографий с "url" в базе данных.
+# Обновление данных о фото пользователя
+def update_person_photos(id_person, new_photos):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
 
-    :param id_person: ID человека в базе данных.
-    :param photos: Список метаданных фотографий.
-                   Каждый элемент может содержать "file_path" или "url" и "dominating".
-    :param files: Список бинарных данных файлов, соответствующих "file_path".
-    """
+    try:
+        # Получаем старые данные о фотографиях из базы данных
+        cur.execute('SELECT photo_name, photo_url FROM photo WHERE id_person = ?', (id_person,))
+        current_photos = cur.fetchall()  # Список старых данных (photo_name, photo_url)
+
+        # Создаем список новых url фотографий для дальнейшего сравнения
+        new_photo_url = [photo['url'] for photo in new_photos]
+
+        # Сравниваем старые фотографии с новыми:
+        for current_photo in current_photos:
+            current_photo_name, current_photo_url = current_photo
+
+            if current_photo_url not in new_photo_url:
+                # Если фото из старых данных нет в новых, удаляем его
+                delete_photo_from_s3(current_photo_name)  # Удаляем фото из хранилища
+                cur.execute('DELETE FROM photo WHERE photo_name = ? AND id_person = ?',
+                            (current_photo_name, id_person))
+
+        # Обновляем или добавляем новые фотографии
+        for new_photo in new_photos:
+            new_photo_url = new_photo['url']
+            new_dominating = new_photo['dominating']
+
+            # Проверяем, существует ли уже такая фотография
+            cur.execute('SELECT photo_url FROM photo WHERE id_person = ? AND photo_url = ?',
+                        (id_person, new_photo_url))
+            existing_photo = cur.fetchone()
+
+            if existing_photo:
+                # Если фото существует, обновляем его доминирование
+                cur.execute('UPDATE photo SET dominating = ? WHERE photo_url = ? AND id_person = ?',
+                            (new_dominating, new_photo_url, id_person))
+
+        # Сохраняем изменения в базе данных
+        conn.commit()
+        return True
+
+    except Exception as e:
+        log_error("update_person_photos", e)
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+
+# Добавление данных о фото пользователя
+def add_person_photos(id_person, photos, files):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
@@ -353,55 +478,67 @@ def update_person_photos(id_person, photos, files):
 
         # Обрабатываем каждый элемент из списка метаданных
         for photo_meta in photos:
-            dominating = photo_meta["dominating"]
-
-            # Обработка фото с "file_path" (загрузка в S3 и запись в базу)
+            # Проверяем, есть ли файл для загрузки
             if "file_path" in photo_meta:
                 # Убедимся, что файл для текущего "file_path" доступен
                 if file_index >= len(files):
                     raise ValueError("Количество файлов меньше, чем ожидается по метаданным.")
 
-                photo_data = files[file_index]
+                photo_data = files[file_index]  # {"filename": ..., "content": ...}
                 file_index += 1  # Переходим к следующему файлу
                 photo_name = str(uuid.uuid4()) + ".jpg"
 
-                # Загружаем фото в S3
-                upload_photo_to_s3(photo_data, photo_name)
+                # Загружаем фото в S3 (Передаем только content)
+                upload_photo_to_s3(photo_data["content"], photo_name)
 
                 # Формируем URL фотографии
                 photo_url = get_photo_url(photo_name)
 
                 # Сохраняем данные о фото в базу
                 cur.execute(
-                    '''INSERT INTO photo (id_person, photo_name, photo_url, dominating) 
+                    '''INSERT INTO photo (id_person, photo_name, photo_url, dominating)
                        VALUES (?, ?, ?, ?)''',
-                    (id_person, photo_name, photo_url, dominating)
-                )
-
-            # Обработка фото с "url" (обновление данных в базе)
-            elif "url" in photo_meta:
-                photo_url = photo_meta["url"]
-
-                # Обновляем значение dominating для фото
-                cur.execute(
-                    '''UPDATE photo
-                       SET dominating = ?
-                       WHERE id_person = ? AND photo_url = ?''',
-                    (dominating, id_person, photo_url)
+                    (id_person, photo_name, photo_url, photo_meta["dominating"])
                 )
 
         # Сохраняем изменения
         conn.commit()
-
         return True
 
     except Exception as e:
-        logging.error(f"update_person_photos: {e}")
+        log_error("add_person_photos", e)
+        conn.rollback()
         return False
 
     finally:
         conn.close()
 
+
+# Удаление фото пользователя
+def dell_person_photos_in_s3(id_person):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    try:
+        # Получаем старые данные о фотографиях из базы данных
+        cur.execute('SELECT photo_name FROM photo WHERE id_person = ?', (id_person,))
+        current_photos = cur.fetchall()  # Список старых данных (photo_name)
+
+        # Сравниваем старые фотографии с новыми:
+        for current_photo in current_photos:
+            current_photo_name = current_photo
+            delete_photo_from_s3(current_photo_name)  # Удаляем фото из хранилища
+
+        # Сохраняем изменения в базе данных
+        conn.commit()
+        return True
+
+    except Exception as e:
+        log_error("dell_person_photos_in_s3", e)
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
 
 
 # Получение фотографий из базы данных по id_person
@@ -470,23 +607,152 @@ def get_incognito_status(user_id):
         conn.close()
 
 
+# Функция для добавления записи в таблицу black_list
+def add_to_black_list(id_person, id_block):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+        cur.execute('INSERT INTO black_list (id_person, id_block) VALUES (?, ?)', (id_person, id_block))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        log_error("add_to_black_list", e)
+        return False
+
+
+# Функция для удаления записи из таблицы black_list
+def remove_from_black_list(id_person, id_block):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+        cur.execute('DELETE FROM black_list WHERE id_person = ? AND id_block = ?', (id_person, id_block))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        log_error("remove_from_black_list", e)
+        return False
+
+
+# Функция для получения всех заблокированных пользователей
+def get_all_blocked_users(id_person):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+
+        # Запрос с JOIN для получения данных о заблокированных пользователях
+        cur.execute('''
+            SELECT 
+                p.id_person AS blocked_id, 
+                p.name, 
+                p.age, 
+                ph.photo_url
+            FROM black_list bl
+            JOIN person_info p ON bl.id_block = p.id_person
+            LEFT JOIN photo ph ON p.id_person = ph.id_person AND ph.dominating = 0
+            WHERE bl.id_person = ?
+        ''', (id_person,))
+
+        blocked_users = cur.fetchall()
+        conn.close()
+
+        # Форматируем результат в удобный список словарей
+        result = [
+            {
+                "id": user[0],
+                "name": user[1],
+                "age": user[2],
+                "photo_url": user[3]
+            }
+            for user in blocked_users
+        ]
+
+        return result
+
+    except Exception as e:
+        log_error("get_all_blocked_users", e)
+        return None
+
+
+def get_notification_person(id_person):
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    try:
+        # Выполняем запрос для получения данных по id_person
+        cur.execute("SELECT * FROM notification WHERE id_person = ?", (id_person,))
+        result = cur.fetchone()
+
+        if result:
+            return {
+                "like": result[2],
+                "match": result[3],
+                "chat": result[4],
+            }
+        else:
+            return None
+
+    except Exception as e:
+        log_error("get_notification_person", e)
+        return None
+
+    finally:
+        conn.close()
+
+
+def set_notification_person(id_person, like=1, match=1, chat=1):
+    try:
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+
+        # SQL-запрос с ON CONFLICT DO UPDATE
+        cur.execute('''
+            INSERT INTO notification (id_person, like, match, chat)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(id_person) DO UPDATE SET
+                like=excluded.like,
+                match=excluded.match,
+                chat=excluded.chat
+        ''', (id_person, like, match, chat))
+
+        conn.commit()
+        conn.close()
+        return True
+
+    except Exception as e:
+        log_error("set_notification_person", e)
+        return False
+
+
 # Функция для получения списка пользователей по критериям
 def get_filtered_persons(min_age, max_age, gender, target, limit=10):
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
     try:
-        # SQL-запрос с фильтрацией по возрасту, полу и цели
-        cur.execute('''
-            SELECT person_info.id_person, person_info.name, person_info.age, person_info.id_gender, 
-                   person_info.id_target, person_info.city, person_info.height, person_info.id_zodiac_sign,
-                   person_info.id_education, person_info.id_children, person_info.id_smoking, person_info.id_alcohol
-            FROM person_info
-            WHERE person_info.age BETWEEN ? AND ?
-              AND person_info.id_gender = ?
-              AND person_info.id_target = ?
-            LIMIT ?
-        ''', (min_age, max_age, gender, target, limit))
+        # Формируем SQL-запрос в зависимости от значения gender
+        if gender == 0:
+            query = '''
+                SELECT person_info.id_person, person_info.name, person_info.age, person_info.city, person_info.height, person_info.id_zodiac_sign,
+                       person_info.id_education, person_info.id_children, person_info.id_smoking, person_info.id_alcohol
+                FROM person_info
+                WHERE person_info.age BETWEEN ? AND ?
+                  AND person_info.id_target = ?
+                LIMIT ?
+            '''
+            params = (min_age, max_age, target, limit)
+        else:
+            query = '''
+                SELECT person_info.id_person, person_info.name, person_info.age, person_info.city, person_info.height, person_info.id_zodiac_sign,
+                       person_info.id_education, person_info.id_children, person_info.id_smoking, person_info.id_alcohol
+                FROM person_info
+                WHERE person_info.age BETWEEN ? AND ?
+                  AND person_info.id_gender = ?
+                  AND person_info.id_target = ?
+                LIMIT ?
+            '''
+            params = (min_age, max_age, gender, target, limit)
 
+        cur.execute(query, params)
         persons = cur.fetchall()
         return persons
 
@@ -496,70 +762,3 @@ def get_filtered_persons(min_age, max_age, gender, target, limit=10):
 
     finally:
         conn.close()
-
-
-# drop_all_tables()
-# create_data_base()
-
-
-# # Список возможных городов России
-# cities = ["Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань", "Нижний Новгород", "Челябинск",
-#           "Самара", "Ростов-на-Дону", "Омск"]
-#
-# # Список имён
-# names_male = ["Иван", "Алексей", "Максим", "Сергей", "Владимир", "Дмитрий", "Егор", "Андрей", "Николай", "Константин",
-#               "Роман", "Олег", "Артем"]
-# names_female = ["Анна", "Мария", "Екатерина", "София", "Дарья", "Ольга", "Юлия", "Ирина", "Наталья", "Елена", "Алиса",
-#                 "Виктория", "Вероника"]
-#
-# # Список ягод
-# berries = ["клубнику", "малину", "чернику", "ежевику", "клюкву", "вишню"]
-#
-# conn = sqlite3.connect(DB_NAME)
-# cur = conn.cursor()
-#
-# # Генерация 26 аккаунтов
-# for i in range(26):
-#     # Генерация email
-#     email = f"user{i + 1}@example.com"
-#     password = "12345678"
-#
-#     # Вставка данных в таблицу person
-#     cur.execute("INSERT INTO person (email, password) VALUES (?, ?)", (email, password))
-#     person_id = cur.lastrowid
-#
-#     # Выбор пола и имени
-#     if i < 13:  # Первая половина мужчины
-#         name = random.choice(names_male)
-#         gender = 1
-#     else:  # Вторая половина женщины
-#         name = random.choice(names_female)
-#         gender = 2
-#
-#     # Генерация остальной информации
-#     age = random.randint(18, 60)
-#     target = random.randint(0, 3)
-#     city = random.choice(cities)
-#     height = str(random.randint(160, 190)) + " см"
-#     zodiac_sign = random.randint(0, 11)
-#     education = random.randint(0, 3)
-#     children = random.randint(0, 2)
-#     smoking = random.randint(0, 2)
-#     alcohol = random.randint(0, 2)
-#
-#     # Вставка данных в таблицу person_info
-#     cur.execute('''INSERT INTO person_info (
-#                         id_person, name, age, id_gender, id_target, city, height, id_zodiac_sign, id_education, id_children, id_smoking, id_alcohol
-#                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-#                 (
-#                 person_id, name, age, gender, target, city, height, zodiac_sign, education, children, smoking, alcohol))
-#
-#     # Генерация "о себе"
-#     description = f"Я люблю {random.choice(berries)}"
-#     cur.execute("INSERT INTO about_me (id_person, description) VALUES (?, ?)", (person_id, description))
-#
-# # Сохранение изменений
-# conn.commit()
-#
-# # Закрытие соединения
-# conn.close()
