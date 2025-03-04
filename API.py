@@ -6,13 +6,13 @@ import logging
 import datetime
 
 from smtp import key_generation, send_email
-from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
-                       save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
-                       get_filtered_persons,
-                       update_incognito_status, get_incognito_status, delete_user_data, get_photo,
-                       add_to_black_list, get_all_blocked_users, remove_from_black_list, get_notification_person,
-                       set_notification_person, update_password, update_person_photos, add_person_photos,
-                       dell_person_photos_in_s3)
+from DB import (create_database, add_new_person, check_email, check_person_data_base, save_about_me,
+                save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
+                get_filtered_persons,
+                update_incognito_status, get_incognito_status, delete_user_data, get_photo,
+                add_to_black_list, get_all_blocked_users, remove_from_black_list, get_notification_person,
+                set_notification_person, update_password, update_person_photos, add_person_photos,
+                dell_person_photos_in_s3)
 
 app = Flask(__name__)
 
@@ -108,7 +108,8 @@ def register_person():
         if status == 0:
             code = key_generation()
             # Вызываем функцию send_email в отдельном потоке
-            email_thread = threading.Thread(target=send_email, args=(email, "Код регистрации", "Разовый код: " + str(code)))
+            email_thread = threading.Thread(target=send_email,
+                                            args=(email, "Код регистрации", "Разовый код: " + str(code)))
             email_thread.start()
 
             return jsonify({"status": 0, "code": code})
@@ -131,9 +132,6 @@ def add_new_person_route():
         password = data['password']
 
         info = add_new_person(email, password)
-
-
-
 
         # status:
         # 0 - успешно
@@ -482,18 +480,18 @@ def set_notification():
 # Пользователь поставил лайк
 # @app.route('/like_person', methods=['POST'])
 # def like_person():
-    # try:
-    #     id_person = request.json.get('id_person')
-    #     id_second_person = request.json.get('id_second_person')
-    #
-    #     if set_notification_person(id_person, like, match, chat):
-    #         return jsonify({"status": 0})
-    #     else:
-    #         return jsonify({"status": 1})
-    #
-    # except Exception as ex:
-    #     log_error("/set_notification", ex)
-    #     return jsonify({"status": 2})
+# try:
+#     id_person = request.json.get('id_person')
+#     id_second_person = request.json.get('id_second_person')
+#
+#     if set_notification_person(id_person, like, match, chat):
+#         return jsonify({"status": 0})
+#     else:
+#         return jsonify({"status": 1})
+#
+# except Exception as ex:
+#     log_error("/set_notification", ex)
+#     return jsonify({"status": 2})
 
 
 # Маршрут для получения информации о пользователях
@@ -554,7 +552,7 @@ def pars_persons_list():
 if __name__ == '__main__':
     try:
         # drop_all_tables()
-        create_data_base()
+        create_database()
         # Запускаем сервер на всех доступных интерфейсах (0.0.0.0) и указываем порт 5000
         app.run(debug=True, host='0.0.0.0', port=8000)
 

@@ -1,0 +1,84 @@
+CREATE TABLE person(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+email VARCHAR(255) NOT NULLUNIQUE,
+password VARCHAR(255)NOT NULL,
+incognito TINYINT NOT NULL DEFAULT 0
+) ENGINE = InnoDB;
+
+
+CREATE TABLE about_me(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+id_person INT NOT NULL,
+description TEXT,
+FOREIGN KEY(id_person) REFERENCES person(id) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+
+CREATE TABLE
+photo(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+id_person INT NOT NULL,
+photo_name VARCHAR(255),
+photo_url VARCHAR(2083),
+dominating TINYINT,
+FOREIGN KEY(id_person) REFERENCES person(id) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+
+CREATE TABLE person_info(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+id_person INT NOT NULL,
+name VARCHAR(100),
+age INT,
+id_gender INT,
+id_target INT,
+city VARCHAR(100),
+height VARCHAR(10),
+id_zodiac_sign INT,
+id_education INT,
+id_children INT,
+id_smoking INT,
+id_alcohol INT,
+fullness INT,
+FOREIGN KEY(id_person) REFERENCES person(id) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+
+CREATE TABLE black_list(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+id_person INT NOT NULL,
+id_block INT NOT NULL,
+FOREIGN KEY(id_person) REFERENCES person(id) ON DELETE CASCADE,
+FOREIGN KEY(id_block) REFERENCES person(id) ON DELETE CASCADE,
+UNIQUE(id_person, id_block)
+) ENGINE = InnoDB;
+
+
+CREATE TABLE notification(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+id_personINT NOT NULL UNIQUE,
+like_notification TINYINT NOT NULL DEFAULT 1,
+match_notification TINYINT NOT NULL DEFAULT 1,
+chat_notification TINYINT NOT NULL DEFAULT 1,
+FOREIGN KEY(id_person) REFERENCES person(id) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+
+CREATE TABLE likes(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+id_person INT NOT NULL,
+id_liked INT NOT NULL,
+FOREIGN KEY(id_person) REFERENCES person(id) ON DELETE CASCADE,
+FOREIGN KEY(id_liked) REFERENCES person(id) ON DELETE CASCADE,
+UNIQUE(id_person, id_liked)
+) ENGINE = InnoDB;
+
+
+CREATE wTABLE dislikes(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+id_person INT NOT NULL,
+id_disliked INT NOT NULL,
+FOREIGN KEY(id_person) REFERENCES person(id) ON DELETE CASCADE,
+FOREIGN KEY(id_disliked) REFERENCES person(id) ON DELETE CASCADE,
+UNIQUE(id_person, id_disliked)
+) ENGINE = InnoDB;
