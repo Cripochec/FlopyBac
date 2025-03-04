@@ -6,7 +6,7 @@ import logging
 import datetime
 
 from smtp import key_generation, send_email
-from DB import (create_database, add_new_person, check_email, check_person_data_base, save_about_me,
+from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
                 save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
                 get_filtered_persons,
                 update_incognito_status, get_incognito_status, delete_user_data, get_photo,
@@ -557,7 +557,7 @@ def pars_persons_list():
 if __name__ == '__main__':
     try:
         # drop_all_tables()
-        create_database()
+        create_data_base()
         # Запускаем сервер на всех доступных интерфейсах (0.0.0.0) и указываем порт 5000
         app.run(debug=True, host='0.0.0.0', port=8000)
 
