@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="test commit">
+    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="new database mysql8">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DB.py" beforeDir="false" afterPath="$PROJECT_DIR$/DB.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DB_SQLite.py" beforeDir="false" afterPath="$PROJECT_DIR$/DB_SQLite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TEST.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/reqest.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/yyyyyyyyyyyyyyyyyyyyyyy.txt" beforeDir="false" afterPath="$PROJECT_DIR$/yyyyyyyyyyyyyyyyyyyyyyy.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API.py" beforeDir="false" afterPath="$PROJECT_DIR$/API.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -443,7 +439,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741102396321</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="new database mysql8">
+      <option name="closed" value="true" />
+      <created>1741118920361</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1741118920361</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -480,7 +484,8 @@
     <MESSAGE value="New Point, working profile ALL" />
     <MESSAGE value="A lot of work has been done, the stage of like and dislike" />
     <MESSAGE value="test commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="test commit" />
+    <MESSAGE value="new database mysql8" />
+    <option name="LAST_COMMIT_MESSAGE" value="new database mysql8" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -492,17 +497,17 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>35</line>
+          <line>40</line>
           <option name="timeStamp" value="21" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>499</line>
+          <line>502</line>
           <option name="timeStamp" value="28" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/API.py</url>
-          <line>482</line>
+          <line>485</line>
           <option name="timeStamp" value="29" />
         </line-breakpoint>
       </breakpoints>

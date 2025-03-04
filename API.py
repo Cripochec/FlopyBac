@@ -24,6 +24,11 @@ logging.basicConfig(
 )
 
 
+@app.route('/')
+def home():
+    return 'Hello, World!'
+
+
 def log_error(route_name, error):
     logging.error(f'SERVER, API.py ({route_name}): {error}')
 
