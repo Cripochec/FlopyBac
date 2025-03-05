@@ -570,7 +570,7 @@ def pars_persons_list():
 
 if __name__ == '__main__':
     try:
-        # create_database()
+        create_database()
         # drop_all_tables()
         create_tables()
         # Запускаем сервер на всех доступных интерфейсах (0.0.0.0) и указываем порт 5000

@@ -10,3 +10,12 @@
 2025-03-05 13:55:23,317 INFO 192.168.0.102 - - [05/Mar/2025 13:55:23] "POST /add_new_person_route HTTP/1.1" 200 -
 2025-03-05 13:58:43,390 INFO  * Detected change in 'C:\\Project\\FlopyB\\DB.py', reloading
 2025-03-05 13:58:43,488 INFO  * Restarting with stat
+2025-03-05 13:58:54,465 ERROR SERVER, DB_MySQL.py(create_tables): (2003, "Can't connect to MySQL server on '192.168.1.6' (timed out)")
+2025-03-05 13:58:54,480 WARNING  * Debugger is active!
+2025-03-05 13:58:54,489 INFO  * Debugger PIN: 134-053-922
+2025-03-05 14:05:24,868 INFO  * Detected change in 'C:\\Project\\FlopyB\\API.py', reloading
+2025-03-05 14:05:24,966 INFO  * Restarting with stat
+2025-03-05 14:05:35,941 ERROR SERVER, DB_MySQL.py(create_database): (2003, "Can't connect to MySQL server on '192.168.1.6' (timed out)")
+2025-03-05 14:05:45,944 ERROR SERVER, DB_MySQL.py(create_tables): (2003, "Can't connect to MySQL server on '192.168.1.6' (timed out)")
+2025-03-05 14:05:45,957 WARNING  * Debugger is active!
+2025-03-05 14:05:45,965 INFO  * Debugger PIN: 134-053-922
