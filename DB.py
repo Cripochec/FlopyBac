@@ -6,11 +6,17 @@ import ast
 from API_YandexCloud import upload_photo_to_s3, get_photo_url, delete_photo_from_s3
 
 # Подключение к MySQL
+# DB_HOST = "213.171.8.190"
+# DB_PORT = 3306
+# DB_USER = "gen_user"
+# DB_PASSWORD = "Z;26w3wm>RVl8n"
+# DB_NAME = "default_db"
+
 DB_HOST = "192.168.1.6"
 DB_PORT = 3306
 DB_USER = "gen_user"
 DB_PASSWORD = "Z;26w3wm>RVl8n"
-DB_NAME = "default_db"  # Замени на название твоей базы
+DB_NAME = "default_db"
 
 # Настройка логирования
 logging.basicConfig(
@@ -31,13 +37,12 @@ def get_connection():
         port=DB_PORT,
         user=DB_USER,
         password=DB_PASSWORD,
-        database=DB_NAME,
-        cursorclass=pymysql.cursors.DictCursor
+        database=DB_NAME
     )
 
 
+# Создание базы данных
 def create_database():
-    """Создание базы данных (если у тебя есть права)"""
     try:
         conn = pymysql.connect(
             host=DB_HOST,
@@ -53,8 +58,8 @@ def create_database():
         log_error("create_database", e)
 
 
+# Создание всех таблиц
 def create_tables():
-    """Создание всех таблиц"""
     try:
         conn = get_connection()
         with conn.cursor() as cursor:
@@ -141,8 +146,9 @@ def create_tables():
         log_error("create_tables", e)
 
 
+# Удаление всех таблиц
 def drop_all_tables():
-    """Удаление всех таблиц"""
+
     try:
         conn = get_connection()
         with conn.cursor() as cursor:
@@ -162,12 +168,61 @@ def drop_all_tables():
         log_error("drop_all_tables", e)
 
 
+# Удаление пользователя из бд
+def delete_user_data(id_person):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        tables = ["about_me", "photo", "person_info", "black_list", "notification", "likes", "dislikes"]
+
+        cur.execute(f'DELETE FROM person WHERE id = %s', (id_person,))
+
+        for table in tables:
+            cur.execute(f'DELETE FROM {table} WHERE id_person = %s', (id_person,))
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        log_error("delete_user_data", e)
+        return False
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Вхождение email в общую таблицу
+def check_email(email):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('SELECT COUNT(*) FROM person WHERE email = %s', (email,))
+        result = cur.fetchone()
+
+        if result:
+            count = result[0]
+            return 1 if count > 0 else 0
+        else:
+            return 2  # Если запрос ничего не вернул
+
+    except Exception as e:
+        log_error("check_email", e)
+        return 2
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
 # Добавление в таблицу person нового пользователя
 def add_new_person(email, password):
+    conn = get_connection()
+    cur = conn.cursor()
     try:
-        conn = get_connection()
-        cur = conn.cursor()
-
         cur.execute('INSERT INTO person (email, password) VALUES (%s, %s)', (email, password))
         user_id = cur.lastrowid
         conn.commit()
@@ -180,15 +235,83 @@ def add_new_person(email, password):
 
     finally:
         if conn:
+            cur.close()
+            conn.close()
+
+
+# Установка уведомлений для пользователя
+def set_notification_person(id_person, likes=1, matches=1, chats=1):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('''INSERT INTO notification (id_person, like_notif, match_notif, chat_notif)
+                        VALUES (%s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE like_notif=%s, match_notif=%s, chat_notif=%s''',
+                    (id_person, likes, matches, chats, likes, matches, chats))
+        conn.commit()
+        return True
+    except Exception as e:
+        log_error("set_notification_person", e)
+        return False
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Получение уведомлений пользователя
+def get_notification_person(id_person):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        # Выполняем запрос для получения данных по id_person
+        cur.execute("SELECT * FROM notification WHERE id_person = %s", (id_person,))
+        result = cur.fetchone()
+
+        if result:
+            return {
+                "like": result[2],
+                "match": result[3],
+                "chat": result[4],
+            }
+        else:
+            return None
+
+    except Exception as e:
+        log_error("get_notification_person", e)
+        return None
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Обновление пароля пользователя
+def update_password(email, new_password):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('UPDATE person SET password = %s WHERE email = %s', (new_password, email))
+
+        conn.commit()
+        return 0
+
+    except Exception as e:
+        log_error("update_password", e)
+        return {"status": 2, "error": str(e)}
+
+    finally:
+        if conn:
+            cur.close()
             conn.close()
 
 
 # Вход в приложение
 def check_person_data_base(email, password):
+    conn = get_connection()
+    cur = conn.cursor()
     try:
-        conn = get_connection()
-        cur = conn.cursor()
-
         cur.execute("SELECT id, password FROM person WHERE email=%s", (email,))
         user_info = cur.fetchone()
 
@@ -207,83 +330,15 @@ def check_person_data_base(email, password):
 
     finally:
         if conn:
-            conn.close()
-
-
-# Удаление пользователя из бд
-def delete_user_data(id_person):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-
-        tables = ["person", "about_me", "photo", "person_info", "black_list", "notification", "likes", "dislikes"]
-
-        for table in tables:
-            cur.execute(f'DELETE FROM {table} WHERE id_person = %s', (id_person,))
-
-        conn.commit()
-        return True
-
-    except Exception as e:
-        conn.rollback()
-        log_error("delete_user_data", e)
-        return False
-
-    finally:
-        if conn:
-            conn.close()
-
-
-# Вхождение email в общую таблицу
-def check_email(email):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-
-        cur.execute('SELECT COUNT(*) FROM person WHERE email = %s', (email,))
-        count = cur.fetchone()[0]
-
-        return 1 if count > 0 else 0
-
-    except Exception as e:
-        log_error("check_email", e)
-        return 2
-
-    finally:
-        if conn:
-            conn.close()
-
-
-# Обновление пароля пользователя
-def update_password(email, new_password):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-
-        cur.execute('UPDATE person SET password = %s WHERE email = %s', (new_password, email))
-
-        if cur.rowcount == 0:
-            log_error("update_password", "Email not found")
-            return 1  # Email не найден
-
-        conn.commit()
-        return 0
-
-    except Exception as e:
-        log_error("update_password", e)
-        return {"status": 2, "error": str(e)}
-
-    finally:
-        if conn:
+            cur.close()
             conn.close()
 
 
 # Сохранение записей о себе пользователя
 def save_about_me(about_me, id_person):
+    conn = get_connection()
+    cur = conn.cursor()
     try:
-        conn = get_connection()
-        cur = conn.cursor()
-
         # Удалить старые записи
         cur.execute('DELETE FROM about_me WHERE id_person = %s', (id_person,))
 
@@ -304,16 +359,16 @@ def save_about_me(about_me, id_person):
 
     finally:
         if conn:
+            cur.close()
             conn.close()
 
 
 # Сохранение данных о пользователе
 def save_person_info(id_person, name, age, id_gender, id_target, city, height,
                      id_zodiac_sign, id_education, id_children, id_smoking, id_alcohol, fullness):
+    conn = get_connection()
+    cur = conn.cursor()
     try:
-        conn = get_connection()
-        cur = conn.cursor()
-
         # Удалить старую информацию
         cur.execute('DELETE FROM person_info WHERE id_person = %s', (id_person,))
 
@@ -334,15 +389,73 @@ def save_person_info(id_person, name, age, id_gender, id_target, city, height,
 
     finally:
         if conn:
+            cur.close()
+            conn.close()
+
+
+# Добавление данных о фото пользователя
+def add_person_photos(id_person, photos, files):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        file_index = 0
+
+        for photo_meta in photos:
+            if "file_path" in photo_meta:
+                if file_index >= len(files):
+                    raise ValueError("Количество файлов меньше, чем ожидается по метаданным.")
+
+                photo_data = files[file_index]
+                file_index += 1
+                photo_name = str(uuid.uuid4()) + ".jpg"
+                upload_photo_to_s3(photo_data["content"], photo_name)
+                photo_url = get_photo_url(photo_name)
+
+                cur.execute(
+                    '''INSERT INTO photo (id_person, photo_name, photo_url, dominating)
+                       VALUES (%s, %s, %s, %s)''',
+                    (id_person, photo_name, photo_url, photo_meta["dominating"])
+                )
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        log_error("add_person_photos", e)
+        conn.rollback()
+        return False
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Получение фотографий из базы данных по id_person
+def get_photo(id_person):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('SELECT photo_url, dominating FROM photo WHERE id_person = %s', (id_person,))
+        photos = cur.fetchall()
+        photo_list = [{"photo_url": photo[0], "dominating": photo[1]} for photo in photos]
+        return photo_list
+
+    except Exception as e:
+        log_error("get_photo", e)
+        return []
+
+    finally:
+        if conn:
+            cur.close()
             conn.close()
 
 
 # Получение всех записей "О себе" определённого пользователя
 def get_about_me_descriptions(id_person):
+    conn = get_connection()
+    cur = conn.cursor()
     try:
-        conn = get_connection()
-        cur = conn.cursor()
-
         cur.execute('SELECT description FROM about_me WHERE id_person = %s', (id_person,))
         descriptions = cur.fetchall()
 
@@ -354,6 +467,7 @@ def get_about_me_descriptions(id_person):
 
     finally:
         if conn:
+            cur.close()
             conn.close()
 
 
@@ -385,8 +499,9 @@ def get_person_info(id_person):
         log_error("get_person_info", e)
         return None
     finally:
-        cur.close()
-        conn.close()
+        if conn:
+            cur.close()
+            conn.close()
 
 
 # Обновление данных о фото пользователя
@@ -412,34 +527,141 @@ def update_person_photos(id_person, new_photos):
         conn.rollback()
         return False
     finally:
-        cur.close()
-        conn.close()
+        if conn:
+            cur.close()
+            conn.close()
 
 
-def set_notification_person(id_person, like=1, match=1, chat=1):
+# Получение статуса инкогнито у пользователя
+def get_incognito_status(user_id):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute('''INSERT INTO notification (id_person, like, match, chat)
-                        VALUES (%s, %s, %s, %s)
-                        ON DUPLICATE KEY UPDATE like=%s, match=%s, chat=%s''',
-                    (id_person, like, match, chat, like, match, chat))
+        cur.execute('SELECT incognito FROM person WHERE id = %s', (user_id,))
+        result = cur.fetchone()
+        return result[0] if result else None
+
+    except Exception as e:
+        log_error("get_incognito_status", e)
+        return None
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Замена статуса инкогнито у пользователя
+def update_incognito_status(id_person, incognito_status):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('UPDATE person SET incognito = %s WHERE id = %s', (incognito_status, id_person))
         conn.commit()
         return True
+
     except Exception as e:
-        log_error("set_notification_person", e)
+        log_error("update_incognito_status", e)
         return False
+
     finally:
-        cur.close()
-        conn.close()
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Функция для добавления записи в таблицу black_list
+def add_to_black_list(id_person, id_block):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('INSERT INTO black_list (id_person, id_block) VALUES (%s, %s)', (id_person, id_block))
+        conn.commit()
+        return True
+
+    except Exception as e:
+        log_error("add_to_black_list", e)
+        return False
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Функция для получения всех заблокированных пользователей
+def get_all_blocked_users(id_person):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('''
+            SELECT p.id_person, p.name, p.age, ph.photo_url
+            FROM black_list bl
+            JOIN person_info p ON bl.id_block = p.id_person
+            LEFT JOIN photo ph ON p.id_person = ph.id_person AND ph.dominating = 0
+            WHERE bl.id_person = %s''', (id_person,))
+        blocked_users = cur.fetchall()
+        return [{"id": user[0], "name": user[1], "age": user[2], "photo_url": user[3]} for user in blocked_users]
+
+    except Exception as e:
+        log_error("get_all_blocked_users", e)
+        return None
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Функция для удаления записи из таблицы black_list
+def remove_from_black_list(id_person, id_block):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('DELETE FROM black_list WHERE id_person = %s AND id_block = %s', (id_person, id_block))
+        conn.commit()
+        return True
+
+    except Exception as e:
+        log_error("remove_from_black_list", e)
+        return False
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
+
+
+# Удаление фото пользователя
+def dell_person_photos_in_s3(id_person):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('SELECT photo_name FROM photo WHERE id_person = %s', (id_person,))
+        current_photos = cur.fetchall()
+
+        for current_photo in current_photos:
+            delete_photo_from_s3(current_photo[0])
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        log_error("dell_person_photos_in_s3", e)
+        conn.rollback()
+        return False
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
 
 
 # Функция для получения списка пользователей по критериям
 def get_filtered_persons(min_age, max_age, gender, target, limit=10):
+    conn = get_connection()
+    cur = conn.cursor()
     try:
-        conn = get_connection()
-        cur = conn.cursor()
-
         if gender == 0:
             query = '''
                 SELECT id_person, name, age, city, height, id_zodiac_sign,
@@ -471,214 +693,8 @@ def get_filtered_persons(min_age, max_age, gender, target, limit=10):
         return False
 
     finally:
-        if conn.is_connected():
+        if conn:
             cur.close()
             conn.close()
 
 
-# Добавление данных о фото пользователя
-def add_person_photos(id_person, photos, files):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        file_index = 0
-
-        for photo_meta in photos:
-            if "file_path" in photo_meta:
-                if file_index >= len(files):
-                    raise ValueError("Количество файлов меньше, чем ожидается по метаданным.")
-
-                photo_data = files[file_index]
-                file_index += 1
-                photo_name = str(uuid.uuid4()) + ".jpg"
-                upload_photo_to_s3(photo_data["content"], photo_name)
-                photo_url = get_photo_url(photo_name)
-
-                cur.execute(
-                    '''INSERT INTO photo (id_person, photo_name, photo_url, dominating)
-                       VALUES (%s, %s, %s, %s)''',
-                    (id_person, photo_name, photo_url, photo_meta["dominating"])
-                )
-
-        conn.commit()
-        return True
-
-    except Exception as e:
-        log_error("add_person_photos", e)
-        conn.rollback()
-        return False
-
-    finally:
-        if conn.is_connected():
-            cur.close()
-            conn.close()
-
-
-# Удаление фото пользователя
-def dell_person_photos_in_s3(id_person):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT photo_name FROM photo WHERE id_person = %s', (id_person,))
-        current_photos = cur.fetchall()
-
-        for current_photo in current_photos:
-            delete_photo_from_s3(current_photo[0])
-
-        conn.commit()
-        return True
-
-    except Exception as e:
-        log_error("dell_person_photos_in_s3", e)
-        conn.rollback()
-        return False
-
-    finally:
-        if conn.is_connected():
-            cur.close()
-            conn.close()
-
-
-# Получение фотографий из базы данных по id_person
-def get_photo(id_person):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT photo_url, dominating FROM photo WHERE id_person = %s', (id_person,))
-        photos = cur.fetchall()
-        photo_list = [{"photo_url": photo[0], "dominating": photo[1]} for photo in photos]
-        return photo_list
-
-    except Exception as e:
-        log_error("get_photo", e)
-        return []
-
-    finally:
-        if conn.is_connected():
-            cur.close()
-            conn.close()
-
-
-# Замена статуса инкогнито у пользователя
-def update_incognito_status(id_person, incognito_status):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute('UPDATE person SET incognito = %s WHERE id = %s', (incognito_status, id_person))
-        conn.commit()
-        return True
-
-    except Exception as e:
-        log_error("update_incognito_status", e)
-        return False
-
-    finally:
-        if conn.is_connected():
-            cur.close()
-            conn.close()
-
-
-def get_incognito_status(user_id):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute('SELECT incognito FROM person WHERE id = %s', (user_id,))
-        result = cur.fetchone()
-        return result[0] if result else None
-
-    except Exception as e:
-        log_error("get_incognito_status", e)
-        return None
-
-    finally:
-        if conn.is_connected():
-            cur.close()
-            conn.close()
-
-
-# Функция для добавления записи в таблицу black_list
-def add_to_black_list(id_person, id_block):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute('INSERT INTO black_list (id_person, id_block) VALUES (%s, %s)', (id_person, id_block))
-        conn.commit()
-        return True
-
-    except Exception as e:
-        log_error("add_to_black_list", e)
-        return False
-
-    finally:
-        if conn.is_connected():
-            cur.close()
-            conn.close()
-
-
-# Функция для удаления записи из таблицы black_list
-def remove_from_black_list(id_person, id_block):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute('DELETE FROM black_list WHERE id_person = %s AND id_block = %s', (id_person, id_block))
-        conn.commit()
-        return True
-
-    except Exception as e:
-        log_error("remove_from_black_list", e)
-        return False
-
-    finally:
-        if conn.is_connected():
-            cur.close()
-            conn.close()
-
-
-# Функция для получения всех заблокированных пользователей
-def get_all_blocked_users(id_person):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        cur.execute('''
-            SELECT p.id_person, p.name, p.age, ph.photo_url
-            FROM black_list bl
-            JOIN person_info p ON bl.id_block = p.id_person
-            LEFT JOIN photo ph ON p.id_person = ph.id_person AND ph.dominating = 0
-            WHERE bl.id_person = %s''', (id_person,))
-        blocked_users = cur.fetchall()
-        return [{"id": user[0], "name": user[1], "age": user[2], "photo_url": user[3]} for user in blocked_users]
-
-    except Exception as e:
-        log_error("get_all_blocked_users", e)
-        return None
-
-    finally:
-        if conn.is_connected():
-            cur.close()
-            conn.close()
-
-
-def get_notification_person(id_person):
-    conn = get_connection()
-    cur = conn.cursor()
-    try:
-        # Выполняем запрос для получения данных по id_person
-        cur.execute("SELECT * FROM notification WHERE id_person = %s", (id_person,))
-        result = cur.fetchone()
-
-        if result:
-            return {
-                "like": result[2],
-                "match": result[3],
-                "chat": result[4],
-            }
-        else:
-            return None
-
-    except Exception as e:
-        log_error("get_notification_person", e)
-        return None
-
-    finally:
-        cur.close()
-        conn.close()

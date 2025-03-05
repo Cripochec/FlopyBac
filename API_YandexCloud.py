@@ -7,7 +7,7 @@ from botocore.exceptions import NoCredentialsError
 # Настройка логирования
 logging.basicConfig(
     filename='LOGGING.log',
-    level=logging.DEBUG,
+    level=logging.ERROR,
     format='%(asctime)s %(levelname)s %(message)s'
 )
 

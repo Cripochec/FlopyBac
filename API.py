@@ -6,13 +6,21 @@ import logging
 import datetime
 
 from smtp import key_generation, send_email
-from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
+# from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
+#                 save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
+#                 get_filtered_persons,
+#                 update_incognito_status, get_incognito_status, delete_user_data, get_photo,
+#                 add_to_black_list, get_all_blocked_users, remove_from_black_list, get_notification_person,
+#                 set_notification_person, update_password, update_person_photos, add_person_photos,
+#                 dell_person_photos_in_s3)
+
+from DB import (create_database, add_new_person, check_email, check_person_data_base, save_about_me,
                 save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
                 get_filtered_persons,
                 update_incognito_status, get_incognito_status, delete_user_data, get_photo,
                 add_to_black_list, get_all_blocked_users, remove_from_black_list, get_notification_person,
                 set_notification_person, update_password, update_person_photos, add_person_photos,
-                dell_person_photos_in_s3)
+                dell_person_photos_in_s3, create_tables)
 
 app = Flask(__name__)
 
@@ -37,19 +45,6 @@ def log_error_cl(module, method, error):
     logging.error(f'CLIENT, {module}({method}): {error}')
 
 
-# Обновление репозитория на сервере
-@app.route('/git_update_hook', methods=['POST'])
-def git_update():
-    try:
-        logging.info('Git update hook triggered')
-        os.system('/root/FlopyBac/git_update_hook.sh')
-        logging.info('Git update completed successfully')
-        return 'Updated', 200
-    except Exception as e:
-        log_error("/git_update_hook", e)
-        return f'no updated error: {e}', 400
-
-
 # Логгирование ошибок клиентац
 @app.route('/log', methods=['POST'])
 def log():
@@ -66,32 +61,6 @@ def log():
     except Exception as er:
         log_error("/log", er)
         return jsonify({"status": 1})
-
-
-# Вход в приложение
-@app.route('/entry_person', methods=['POST'])
-def entry_person():
-    try:
-        # Получаем данные из запроса
-        data = request.get_json()
-
-        email = data['email']
-        password = data['password']
-
-        info = check_person_data_base(email, password)
-
-        # status:
-        # 0 - успешно
-        # 1 - email не найден
-        # 2 - password не совпадает
-        # 3 - ошибка сервера
-
-        if info['status'] == 0:
-            return jsonify({"status": info['status'], "id_person": info['user_id']})
-        else:
-            return jsonify({"status": info['status']})
-    except Exception as e:
-        log_error("/entry_person", e)
 
 
 # Регистрация, проверка email нового пользователя и отправка разового кода
@@ -228,6 +197,32 @@ def new_password():
         log_error("/new_password", e)
 
 
+# Вход в приложение
+@app.route('/entry_person', methods=['POST'])
+def entry_person():
+    try:
+        # Получаем данные из запроса
+        data = request.get_json()
+
+        email = data['email']
+        password = data['password']
+
+        info = check_person_data_base(email, password)
+
+        # status:
+        # 0 - успешно
+        # 1 - email не найден
+        # 2 - password не совпадает
+        # 3 - ошибка сервера
+
+        if info['status'] == 0:
+            return jsonify({"status": info['status'], "id_person": info['user_id']})
+        else:
+            return jsonify({"status": info['status']})
+    except Exception as e:
+        log_error("/entry_person", e)
+
+
 # Добавление информации о пользователи
 @app.route('/save_persons_info', methods=['POST'])
 def save_persons_info():
@@ -267,24 +262,7 @@ def save_persons_info():
         return jsonify({"status": 3})
 
 
-@app.route('/update_persons_photos', methods=['POST'])
-def update_persons_photos():
-    try:
-        # Получаем данные из формы
-        data = request.get_json()
-        id_person = data['id_person']
-        photos = data['photos']
-
-        # Обновление данных о фотографиях
-        if update_person_photos(id_person, photos):
-            return jsonify({"status": 0})
-        else:
-            return jsonify({"status": 1})
-    except Exception as e:
-        log_error("/update_persons_photos", e)
-        return jsonify({"status": 2})
-
-
+# Добавление фотографий пользователя
 @app.route('/save_persons_photos', methods=['POST'])
 def save_persons_photos():
     try:
@@ -347,6 +325,25 @@ def pars_persons_info():
         log_error("/pars_persons_info", e)
 
 
+# Обновление фотографий пользователя
+@app.route('/update_persons_photos', methods=['POST'])
+def update_persons_photos():
+    try:
+        # Получаем данные из формы
+        data = request.get_json()
+        id_person = data['id_person']
+        photos = data['photos']
+
+        # Обновление данных о фотографиях
+        if update_person_photos(id_person, photos):
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+    except Exception as e:
+        log_error("/update_persons_photos", e)
+        return jsonify({"status": 2})
+
+
 # Отправления текущего статуса инкогнито пользователя
 @app.route('/get_incognito', methods=['POST'])
 def get_incognito():
@@ -377,72 +374,6 @@ def set_incognito():
             return jsonify({"status": 1})
     except Exception as e:
         log_error("/set_incognito", e)
-
-
-# Удаление аккаунта пользователя
-@app.route('/delete_account', methods=['POST'])
-def delete_account():
-    try:
-        id_person = request.json.get('id_person')
-
-        if dell_person_photos_in_s3(id_person) and delete_user_data(id_person):
-            return jsonify({"status": 0})
-        else:
-            return jsonify({"status": 1})
-
-    except Exception as e:
-        log_error("/delete_account", e)
-
-
-# Добавления пользоватля в чёрный список
-@app.route('/add_black_list', methods=['POST'])
-def add_black_list():
-    try:
-        id_person = request.json.get('id_person')
-        id_block = request.json.get('id_block')
-
-        if add_to_black_list(id_person, id_block):
-            return jsonify({"status": 0})
-        else:
-            return jsonify({"status": 1})
-
-    except Exception as ex:
-        log_error("/add_black_list", ex)
-        return jsonify({"status": 2})
-
-
-# Добавления пользоватля в чёрный список
-@app.route('/remove_black_list', methods=['POST'])
-def remove_black_list():
-    try:
-        id_person = request.json.get('id_person')
-        id_block = request.json.get('id_block')
-
-        if remove_from_black_list(id_person, id_block):
-            return jsonify({"status": 0})
-        else:
-            return jsonify({"status": 1})
-
-    except Exception as ex:
-        log_error("/remove_black_list", ex)
-        return jsonify({"status": 2})
-
-
-# Получение чёрного списка пользоватля
-@app.route('/get_blocked_users', methods=['POST'])
-def get_blocked_users():
-    try:
-        id_person = request.json.get('id_person')
-
-        block_list = get_all_blocked_users(id_person)
-        if block_list is not None:
-            return jsonify({"status": 0, "block_list": block_list})
-        else:
-            return jsonify({"status": 1})
-
-    except Exception as ex:
-        log_error("/get_blocked_users", ex)
-        return jsonify({"status": 2})
 
 
 # Отправка данных о рассылки уведомлений для пользователя
@@ -482,7 +413,90 @@ def set_notification():
         return jsonify({"status": 2})
 
 
+# Добавления пользоватля в чёрный список
+@app.route('/add_black_list', methods=['POST'])
+def add_black_list():
+    try:
+        id_person = request.json.get('id_person')
+        id_block = request.json.get('id_block')
+
+        if add_to_black_list(id_person, id_block):
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as ex:
+        log_error("/add_black_list", ex)
+        return jsonify({"status": 2})
+
+
+# Получение чёрного списка пользоватля
+@app.route('/get_blocked_users', methods=['POST'])
+def get_blocked_users():
+    try:
+        id_person = request.json.get('id_person')
+
+        block_list = get_all_blocked_users(id_person)
+        if block_list is not None:
+            return jsonify({"status": 0, "block_list": block_list})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as ex:
+        log_error("/get_blocked_users", ex)
+        return jsonify({"status": 2})
+
+
+# Добавления пользоватля в чёрный список
+@app.route('/remove_black_list', methods=['POST'])
+def remove_black_list():
+    try:
+        id_person = request.json.get('id_person')
+        id_block = request.json.get('id_block')
+
+        if remove_from_black_list(id_person, id_block):
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as ex:
+        log_error("/remove_black_list", ex)
+        return jsonify({"status": 2})
+
+
+# Удаление аккаунта пользователя
+@app.route('/delete_account', methods=['POST'])
+def delete_account():
+    try:
+        id_person = request.json.get('id_person')
+
+        if dell_person_photos_in_s3(id_person) and delete_user_data(id_person):
+            return jsonify({"status": 0})
+        else:
+            return jsonify({"status": 1})
+
+    except Exception as e:
+        log_error("/delete_account", e)
+
+
 # Пользователь поставил лайк
+# @app.route('/like_person', methods=['POST'])
+# def like_person():
+# try:
+#     id_person = request.json.get('id_person')
+#     id_second_person = request.json.get('id_second_person')
+#
+#     if set_notification_person(id_person, like, match, chat):
+#         return jsonify({"status": 0})
+#     else:
+#         return jsonify({"status": 1})
+#
+# except Exception as ex:
+#     log_error("/set_notification", ex)
+#     return jsonify({"status": 2})
+
+
+# Пользователь поставил дислайк
 # @app.route('/like_person', methods=['POST'])
 # def like_person():
 # try:
@@ -556,8 +570,9 @@ def pars_persons_list():
 
 if __name__ == '__main__':
     try:
+        # create_database()
         # drop_all_tables()
-        create_data_base()
+        create_tables()
         # Запускаем сервер на всех доступных интерфейсах (0.0.0.0) и указываем порт 5000
         app.run(debug=True, host='0.0.0.0', port=8000)
 
