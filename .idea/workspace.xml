@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="debaging API 4">
+    <list default="true" id="d59202ca-2005-49d4-b07b-ac7125e594d4" name="Changes" comment="debaging API 5">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API.py" beforeDir="false" afterPath="$PROJECT_DIR$/API.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API_YandexCloud.py" beforeDir="false" afterPath="$PROJECT_DIR$/API_YandexCloud.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -486,7 +488,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741211654954</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="debaging API 5">
+      <option name="closed" value="true" />
+      <created>1741212560407</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1741212560407</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -501,7 +511,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update API" />
     <MESSAGE value="update code (API Yandex Cloud and any more)" />
     <MESSAGE value="update code, full photo api is worked" />
     <MESSAGE value="update code" />
@@ -526,7 +535,8 @@
     <MESSAGE value="debaging API 2" />
     <MESSAGE value="debaging API 3" />
     <MESSAGE value="debaging API 4" />
-    <option name="LAST_COMMIT_MESSAGE" value="debaging API 4" />
+    <MESSAGE value="debaging API 5" />
+    <option name="LAST_COMMIT_MESSAGE" value="debaging API 5" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

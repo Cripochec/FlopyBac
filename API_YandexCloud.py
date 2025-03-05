@@ -1,8 +1,6 @@
 import logging
 
-from io import BytesIO
 import boto3
-import hashlib
 from botocore.exceptions import NoCredentialsError
 
 
@@ -40,6 +38,7 @@ def delete_photo_from_s3(object_name):
 
 def upload_photo_to_s3(photo_data, object_name):
     try:
+        # Создание клиента S3
         bucket_name = 'flopy-folder'
 
         s3_client = boto3.client(
@@ -51,19 +50,11 @@ def upload_photo_to_s3(photo_data, object_name):
         )
 
         # Преобразуем данные изображения в поток
+        from io import BytesIO
         image_stream = BytesIO(photo_data)
-        image_stream.seek(0)  # ВАЖНО: Сбрасываем указатель в начало файла
 
-        # Вычисляем хеш SHA-256
-        sha256_hash = hashlib.sha256(photo_data).hexdigest()
-
-        # Загружаем файл с проверкой хеша
-        s3_client.put_object(
-            Bucket=bucket_name,
-            Key=object_name,
-            Body=image_stream,
-            ContentSHA256=sha256_hash  # Передаем ожидаемую контрольную сумму
-        )
+        # Загрузка файла в S3
+        s3_client.upload_fileobj(image_stream, bucket_name, object_name)
 
     except Exception as e:
         log_error("upload_photo_to_s3", e)

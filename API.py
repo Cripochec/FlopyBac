@@ -6,21 +6,21 @@ import logging
 import datetime
 
 from smtp import key_generation, send_email
-# from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
-#                 save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
-#                 get_filtered_persons,
-#                 update_incognito_status, get_incognito_status, delete_user_data, get_photo,
-#                 add_to_black_list, get_all_blocked_users, remove_from_black_list, get_notification_person,
-#                 set_notification_person, update_password, update_person_photos, add_person_photos,
-#                 dell_person_photos_in_s3)
-
-from DB import (create_database, add_new_person, check_email, check_person_data_base, save_about_me,
+from DB_SQLite import (create_data_base, add_new_person, check_email, check_person_data_base, save_about_me,
                 save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
                 get_filtered_persons,
                 update_incognito_status, get_incognito_status, delete_user_data, get_photo,
                 add_to_black_list, get_all_blocked_users, remove_from_black_list, get_notification_person,
                 set_notification_person, update_password, update_person_photos, add_person_photos,
-                dell_person_photos_in_s3, create_tables)
+                dell_person_photos_in_s3)
+
+# from DB import (create_database, add_new_person, check_email, check_person_data_base, save_about_me,
+#                 save_person_info, get_about_me_descriptions, get_person_info, drop_all_tables,
+#                 get_filtered_persons,
+#                 update_incognito_status, get_incognito_status, delete_user_data, get_photo,
+#                 add_to_black_list, get_all_blocked_users, remove_from_black_list, get_notification_person,
+#                 set_notification_person, update_password, update_person_photos, add_person_photos,
+#                 dell_person_photos_in_s3, create_tables)
 
 app = Flask(__name__)
 
@@ -570,6 +570,7 @@ def pars_persons_list():
 
 if __name__ == '__main__':
     try:
+        create_data_base()
         # create_database()
         # drop_all_tables()
         # create_tables()
